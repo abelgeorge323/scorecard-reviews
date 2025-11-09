@@ -583,8 +583,12 @@ def main():
         st.subheader("Detailed Data Table")
         
         # Check if we should show a message about selected account
-        if 'selected_account' in st.session_state and st.session_state['selected_account']:
-            st.info(f"📍 Showing details for: **{st.session_state['selected_account']}**")
+        selected_account = st.session_state.get('selected_account', None)
+        if selected_account and selected_account in accounts_with_data:
+            st.info(f"📍 Showing details for: **{selected_account}**")
+        elif selected_account and selected_account not in accounts_with_data:
+            # Account was selected but is now filtered out - clear it
+            st.session_state['selected_account'] = None
         
         if len(accounts_with_data) == 0:
             st.info("No data available.")

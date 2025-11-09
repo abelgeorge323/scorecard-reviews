@@ -421,6 +421,9 @@ def main():
     
     if st.sidebar.button("→ Account Cards", key="sidebar_nav_cards", use_container_width=True):
         st.session_state['current_view'] = 'cards'
+        st.session_state['selected_account'] = None
+        # Reset filters when going back to Account Cards
+        st.session_state.just_cleared_filters = True
         st.rerun()
     
     if st.sidebar.button("→ Data Table", key="sidebar_nav_data", use_container_width=True):
@@ -443,7 +446,8 @@ def main():
     selected_vertical = st.sidebar.selectbox(
         "Select Vertical",
         vertical_options,
-        index=0
+        index=0,  # Always default to 'All'
+        key='vertical_select'
     )
     
     # Filter accounts by vertical
@@ -457,7 +461,8 @@ def main():
     selected_account = st.sidebar.selectbox(
         "Select Account",
         account_options,
-        index=0
+        index=0,  # Always default to 'All'
+        key='account_select'
     )
     
     # Further filter by account if selected
@@ -473,11 +478,13 @@ def main():
     
     if all_scores:
         # Score category filter (radio - pick one)
+        score_options = ["📊 All Scores", "🟢 4.5+", "🟡 3.5-4.5", "🔴 <3.5", "⚪ No Score"]
         score_filter = st.sidebar.radio(
             "Show Accounts:",
-            options=["📊 All Scores", "🟢 4.5+", "🟡 3.5-4.5", "🔴 <3.5", "⚪ No Score"],
-            index=0,  # Default to "All Scores"
-            horizontal=False
+            options=score_options,
+            index=0,  # Always default to 'All Scores'
+            horizontal=False,
+            key='score_radio'
         )
         
         # Helper function to check if score matches selected category
@@ -502,6 +509,7 @@ def main():
     else:
         st.sidebar.info("No score data available")
     
+    
     # Calculate metrics
     accounts_with_data = {k: v for k, v in filtered_accounts.items() if v['has_data']}
     # For "no data" view, always use all_accounts to show true missing data
@@ -510,7 +518,7 @@ def main():
     total_accounts = len(filtered_accounts)
     total_responses = sum(v['response_count'] for v in accounts_with_data.values())
     
-    scores = [v['score'] for v in accounts_with_data.values() if v['score'] is not None]
+    scores = [v['score'] for v in accounts_with_data.values() if v['score'] is not None and pd.notna(v['score'])]
     avg_score = sum(scores) / len(scores) if scores else 0
     
     # Get latest date
@@ -547,6 +555,8 @@ def main():
         if st.button("📇 Account Cards", use_container_width=True, type="primary" if st.session_state['current_view'] == 'cards' else "secondary", key="nav_cards"):
             st.session_state['current_view'] = 'cards'
             st.session_state['selected_account'] = None
+            # Reset filters when going back to Account Cards
+            st.session_state.just_cleared_filters = True
             st.rerun()
     with col2:
         if st.button("📋 Data Table", use_container_width=True, type="primary" if st.session_state['current_view'] == 'data' else "secondary", key="nav_data"):

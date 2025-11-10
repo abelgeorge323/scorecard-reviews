@@ -123,6 +123,10 @@ account_name_variations = {
     "daimler - detroit diesel": "Detroit Diesel (DDC)",
     "GM Grand Rapids": "General Motors",  # GM location
     "gm grand rapids": "General Motors",
+    "Adobe": "Adobe Systems",  # Short name variant
+    "adobe": "Adobe Systems",
+    "Tesla": "Tesla Inc.",  # Short name variant
+    "tesla": "Tesla Inc.",
     "Omnicom": None,  # Omit from dashboard
     
     # Nike accounts - all map to single Nike account

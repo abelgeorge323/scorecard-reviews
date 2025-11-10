@@ -115,6 +115,14 @@ account_name_variations = {
     "abbott": "Abbott Labs",
     "Johnson & Johnson JLL": "Johnson & Johnson",  # JLL managed J&J
     "johnson & johnson jll": "Johnson & Johnson",
+    "Nestle - St. Louis": "Nestle",  # Location-specific Nestle
+    "nestle - st. louis": "Nestle",
+    "GE Healthcare - All Sites": "GE Healthcare",  # Multi-site GE Healthcare
+    "ge healthcare - all sites": "GE Healthcare",
+    "Daimler - Detroit Diesel": "Detroit Diesel (DDC)",  # Daimler owns DDC
+    "daimler - detroit diesel": "Detroit Diesel (DDC)",
+    "GM Grand Rapids": "General Motors",  # GM location
+    "gm grand rapids": "General Motors",
     "Omnicom": None,  # Omit from dashboard
     
     # Nike accounts - all map to single Nike account

@@ -96,7 +96,7 @@ def clean_text(text):
 @st.cache_data(ttl=60)  # Cache for 60 seconds only
 def load_data():
     """Load and process the CSV data with caching"""
-    csv_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (3).csv")
+    csv_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (4).csv")
     
     if not csv_path.exists():
         st.error(f"CSV file not found at: {csv_path}")

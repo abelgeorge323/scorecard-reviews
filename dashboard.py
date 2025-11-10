@@ -196,6 +196,7 @@ def process_data(df):
         
         # Extract score from text like "Every site scored a 5 this month"
         score_patterns = [
+            r'SBM\s+(\d+\.?\d*)',                # "SBM 4.25" or "SBM - 5."
             r'scored?\s+(?:a\s+)?(\d+\.?\d*)',  # "scored a 5" or "score 4.5"
             r'(\d+\.?\d*)\s+out\s+of',          # "5 out of 5"
             r'score[d]?\s+(?:of\s+)?(\d+\.?\d*)', # "score of 5"

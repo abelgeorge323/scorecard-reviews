@@ -93,13 +93,65 @@ def clean_text(text):
     
     return text
 
+def get_available_months():
+    """Detect available month CSV files"""
+    scorecards_dir = Path("Scorecards")
+    months = []
+    
+    # Look for files matching pattern: MonthName_YYYY_Scorecards.csv
+    pattern = re.compile(r'(\w+)_(\d{4})_Scorecards\.csv', re.IGNORECASE)
+    
+    for file in scorecards_dir.glob("*_*_Scorecards.csv"):
+        match = pattern.match(file.name)
+        if match:
+            month_name, year = match.groups()
+            months.append(f"{month_name}_{year}")
+    
+    # Also check for legacy files (current format) - assume it's November 2025
+    legacy_files = list(scorecards_dir.glob("Scorecard Review Executive Summary*.csv"))
+    if legacy_files:
+        # Add November 2025 if not already in list
+        if "November_2025" not in months:
+            months.append("November_2025")
+    
+    return sorted(months, reverse=True)  # Most recent first
+
 @st.cache_data(ttl=60)  # Cache for 60 seconds only
-def load_data():
+def load_data(month=None):
     """Load and process the CSV data with caching"""
-    csv_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
+    scorecards_dir = Path("Scorecards")
+    
+    if month:
+        # Load specific month file
+        if month == "November_2025":
+            # Check for legacy file format first
+            legacy_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
+            if legacy_path.exists():
+                csv_path = legacy_path
+            else:
+                csv_path = scorecards_dir / f"{month}_Scorecards.csv"
+        else:
+            csv_path = scorecards_dir / f"{month}_Scorecards.csv"
+    else:
+        # Default: try to find latest month or fallback to current file
+        available_months = get_available_months()
+        if available_months:
+            month_key = available_months[0]
+            if month_key == "November_2025":
+                # Check for legacy file format first
+                legacy_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
+                if legacy_path.exists():
+                    csv_path = legacy_path
+                else:
+                    csv_path = scorecards_dir / f"{month_key}_Scorecards.csv"
+            else:
+                csv_path = scorecards_dir / f"{month_key}_Scorecards.csv"
+        else:
+            # Fallback to current file format
+            csv_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
     
     if not csv_path.exists():
-        st.error(f"CSV file not found at: {csv_path}")
+        # Return None if file doesn't exist (for blank state)
         return None
     
     # Try multiple encodings to handle special characters
@@ -250,48 +302,77 @@ def build_summary_with_sites(account, latest_row, account_df):
     
     return base_summary
 
+def merge_multiple_reviews(account_df, account_name):
+    """Merge multiple reviews for accounts with multiple entries (e.g., Gilead, Nike)"""
+    if len(account_df) <= 1:
+        return None  # No merging needed
+    
+    # Sort by completion date (most recent first)
+    account_df = account_df.sort_values('Completion_Date', ascending=False)
+    
+    # Get all entries
+    entries = []
+    scores = []
+    for idx, row in account_df.iterrows():
+        original_name = row.get('Name of Account/Portfolio', account_name)
+        score = row.get('Score')
+        if pd.notna(score):
+            scores.append(float(score))
+        
+        summary = row.get('Summary of Review\nWhat did you cover during the review? Please provide a brief summary of what was covered.\n\n', 'N/A')
+        feedback = row.get('Customer Feedback\n\nWhat was the feedback from the client -- include any concerns and compliments shared and who shared it.\n', 'N/A')
+        action_items = row.get('Action Items/Follow Ups\n\nWhat action items/follow ups came out of the meeting? Who owns them and agreed upon timelines?\n', 'N/A')
+        date = row.get('Review_Date', 'N/A')
+        
+        entries.append({
+            'name': original_name,
+            'score': score,
+            'date': date,
+            'summary': summary,
+            'feedback': feedback,
+            'action_items': action_items
+        })
+    
+    # Build merged summary
+    merged_summary = f"**{len(entries)} Reviews Combined:**\n\n"
+    for i, entry in enumerate(entries, 1):
+        score_str = f"Score: {entry['score']}" if pd.notna(entry['score']) else "Score: N/A"
+        merged_summary += f"**{i}. {entry['name']}** ({entry['date']}) - {score_str}\n\n{entry['summary']}\n\n---\n\n"
+    
+    # Build merged feedback
+    merged_feedback = f"**Feedback from {len(entries)} Reviews:**\n\n"
+    for i, entry in enumerate(entries, 1):
+        merged_feedback += f"**{entry['name']}:**\n{entry['feedback']}\n\n---\n\n"
+    
+    # Build merged action items
+    merged_action_items = f"**Action Items from {len(entries)} Reviews:**\n\n"
+    for i, entry in enumerate(entries, 1):
+        merged_action_items += f"**{entry['name']}:**\n{entry['action_items']}\n\n---\n\n"
+    
+    # Calculate average score
+    avg_score = sum(scores) / len(scores) if scores else None
+    
+    # Get latest date
+    latest_date = account_df['Review_Date'].max()
+    latest_completion = account_df['Completion_Date'].max()
+    
+    return {
+        'summary': merged_summary.strip(),
+        'feedback': merged_feedback.strip(),
+        'action_items': merged_action_items.strip(),
+        'score': avg_score,
+        'date': latest_date,
+        'completion_date': latest_completion
+    }
+
 def get_all_accounts_with_data(processed_df):
     """Get dictionary of all accounts with their data"""
     accounts_data = {}
     
+    # Accounts that should merge multiple reviews
+    merge_accounts = ["Gilead Sciences", "Nike", "General Motors"]
+    
     for account, vertical in account_to_vertical.items():
-        # Special handling for Nike - hardcoded all 5 locations
-        if account == "Nike":
-            accounts_data[account] = {
-                'vertical': vertical,
-                'has_data': True,
-                'score': 5.0,
-                'date': pd.Timestamp('2025-11-07'),
-                'completion_date': pd.Timestamp('2025-11-07'),
-                'response_count': 5,
-                'account_director': 'Jack Thornton',
-                'summary': '''**5 Locations - All Scored 5.0:**
-
-1. **Nike/DHL** (11/5 @ 12pm): Met with Tim at his desk to go over the scorecards. Attendees: Jerri Shields (Site Manager), Tim Jones (GM, DHL)
-
-2. **Nike/GXO Relay** (11/5 @ 11am): Geovanni discussed scorecard and how we got those numbers. Attendees: Damon Ruben (GXO Senior Facilities Manager), GeoVanni Castillo (Site Manager)
-
-3. **Nike/GXO Connect** (11/6): Discussed performance and KPIs on the scorecard. Attendees: Albert Diaz (Senior Director), Cole Breidinger (Site Manager)
-
-4. **Nike/NALC** (11/7): Covered all scorecard KPIs. Mrs Hardin was in agreement with all KPIs. Attendees: Cindy Hardin (POC, Facilities Manager), Jack Thornton
-
-5. **Nike/Adapt** (11/7): Went over the entire scorecard for October. Attendees: Cindy Hardin (POC Facilities Manager), Jack Thornton''',
-                'feedback': '''**Client Feedback by Location:**
-
-• **DHL**: Tim stated that SBM is doing a great job.
-
-• **GXO Relay**: Damon is pleased with our team's attention to the floors and how well the site is maintained clean.
-
-• **GXO Connect**: Very pleased with what we continue to do.
-
-• **NALC**: Mrs Hardin advised to stay within the SOW and don't let operations scope creep.
-
-• **Adapt**: Mrs Hardin agreed with our scorecard and had no issues or concerns at this time.''',
-                'action_items': 'N/A - All locations performing well with no specific action items.',
-                'attendees': 'Jack Thornton (Account Director for all 5 locations)'
-            }
-            continue
-        
         if len(processed_df) == 0:
             # No data available, mark all accounts as having no data
             accounts_data[account] = {
@@ -307,7 +388,26 @@ def get_all_accounts_with_data(processed_df):
         account_df = processed_df[processed_df['Account_Normalized'] == account]
         
         if len(account_df) > 0:
-            # Get latest entry by completion date
+            # Check if this account should merge multiple reviews
+            if account in merge_accounts and len(account_df) > 1:
+                merged = merge_multiple_reviews(account_df, account)
+                if merged:
+                    accounts_data[account] = {
+                        'vertical': vertical,
+                        'has_data': True,
+                        'score': merged['score'],
+                        'date': merged['date'],
+                        'completion_date': merged['completion_date'],
+                        'response_count': len(account_df),
+                        'account_director': account_df.iloc[0].get('Please Enter Your Name', 'N/A'),
+                        'summary': merged['summary'],
+                        'feedback': merged['feedback'],
+                        'action_items': merged['action_items'],
+                        'attendees': account_df.iloc[0].get('Who attended your Scorecard Review?\nNames and titles of all external and internal attendees.', 'N/A')
+                    }
+                    continue
+            
+            # Standard processing for single review or accounts not in merge list
             latest_idx = account_df['Completion_Date'].idxmax()
             latest = account_df.loc[latest_idx]
             
@@ -407,16 +507,6 @@ def main():
     st.title("📊 Top 55 Accounts Dashboard")
     st.markdown("---")
     
-    # Load and process data
-    raw_df = load_data()
-    if raw_df is None:
-        st.stop()
-    
-    processed_df = process_data(raw_df)
-    
-    # Get all accounts data
-    all_accounts = get_all_accounts_with_data(processed_df)
-    
     # Sidebar navigation
     st.sidebar.markdown("### 🧭 Quick Navigation")
     
@@ -436,6 +526,70 @@ def main():
         st.rerun()
     
     st.sidebar.markdown("---")
+    
+    # Month selector
+    st.sidebar.header("📅 Select Month")
+    
+    # Get available months
+    available_months = get_available_months()
+    
+    # Always include December 2025 for blank state
+    if "December_2025" not in available_months:
+        available_months.append("December_2025")
+        available_months = sorted(available_months, reverse=True)
+    
+    # Format for display
+    month_display = {m: m.replace("_", " ").title() for m in available_months}
+    month_options = list(month_display.values())
+    
+    # Initialize selected month in session state
+    if 'selected_month' not in st.session_state:
+        st.session_state['selected_month'] = month_options[0] if month_options else "November 2025"
+    
+    # Month selector
+    selected_month_display = st.sidebar.selectbox(
+        "Choose Month",
+        month_options,
+        index=0,
+        key='month_select'
+    )
+    
+    # Convert back to file format
+    selected_month_key = [k for k, v in month_display.items() if v == selected_month_display][0]
+    
+    # Store in session state for use in main processing
+    st.session_state['selected_month_key'] = selected_month_key
+    st.session_state['selected_month_display'] = selected_month_display
+    
+    st.sidebar.markdown("---")
+    
+    # Load and process data for selected month
+    raw_df = load_data(month=selected_month_key)
+    
+    # Handle blank state (no data for selected month)
+    if raw_df is None:
+        # Create empty dataframe to show blank state
+        processed_df = pd.DataFrame()
+        # Set flag to show message in main area
+        st.session_state['show_blank_state_message'] = True
+        st.session_state['blank_state_month'] = selected_month_display
+    else:
+        processed_df = process_data(raw_df)
+        st.session_state['show_blank_state_message'] = False
+    
+    # Get all accounts data
+    all_accounts = get_all_accounts_with_data(processed_df)
+    
+    # Check if IFM column exists in raw data
+    has_ifm_column = False
+    ifm_column_name = None
+    if raw_df is not None:
+        # Look for IFM-related column names (case-insensitive)
+        for col in raw_df.columns:
+            if 'ifm' in str(col).lower() or 'directly contracted' in str(col).lower() or 'third party' in str(col).lower():
+                has_ifm_column = True
+                ifm_column_name = col
+                break
     
     # Sidebar filters
     st.sidebar.header("🔍 Filters")
@@ -510,6 +664,28 @@ def main():
     else:
         st.sidebar.info("No score data available")
     
+    # IFM filter (if column exists)
+    if has_ifm_column and raw_df is not None:
+        st.sidebar.markdown("---")
+        st.sidebar.subheader("🏢 Filter by Contract Type")
+        
+        # Get unique IFM values
+        ifm_values = raw_df[ifm_column_name].dropna().unique().tolist()
+        ifm_options = ['All'] + sorted([str(v) for v in ifm_values if str(v).strip()])
+        
+        selected_ifm = st.sidebar.selectbox(
+            "Contract Type",
+            ifm_options,
+            index=0,
+            key='ifm_filter'
+        )
+        
+        # Apply IFM filter (will be applied later when processing account data)
+        st.session_state['selected_ifm'] = selected_ifm
+        st.session_state['ifm_column_name'] = ifm_column_name
+    else:
+        st.session_state['selected_ifm'] = 'All'
+        st.session_state['ifm_column_name'] = None
     
     # Calculate metrics
     accounts_with_data = {k: v for k, v in filtered_accounts.items() if v['has_data']}
@@ -525,6 +701,11 @@ def main():
     # Get latest date
     dates = [v['completion_date'] for v in accounts_with_data.values() if pd.notna(v.get('completion_date'))]
     latest_date = max(dates).strftime('%m/%d/%Y') if dates else 'N/A'
+    
+    # Show blank state message if needed
+    if st.session_state.get('show_blank_state_message', False):
+        st.info(f"📋 **No data available for {st.session_state.get('blank_state_month', 'selected month')}.** All accounts will show as 'Data Not Collected Yet'.")
+        st.markdown("---")
     
     # Display summary metrics
     col1, col2, col3, col4 = st.columns(4)

@@ -44,6 +44,7 @@ account_to_vertical = {
 
     # 💊 Life Science — (Vertical Leader: Dan Hartman)
     "Merck": "Life Science",                   # Brian Davis / Dave Pergola / Justin Homa
+    "Merck CBRE": "Life Science",              # Justin Homa - Separate from Merck Sodexo
     "Abbott Labs": "Life Science",             # Greg DeMedio
     "Amgen": "Life Science",                   # Thomas Mahoney
     "Eli Lilly": "Life Science",               # Sara Brake / Fern Garner
@@ -58,7 +59,6 @@ account_to_vertical = {
     "Boehringer Ingelheim": "Life Science",    # Zach Shock
     "Novartis": "Life Science",                # Mike Barry
     "Johnson & Johnson": "Life Science",       # Isaac Calderon
-    "Johnson & Johnson - Puerto Rico": "Life Science", # Duplicate of J&J account
     "AbbVie": "Life Science",                  # Corey Wallace (Life Science vertical)
 
     # 💰 Finance — (Vertical Leaders: Peggy Shum / Tiffany Purifoy)
@@ -142,4 +142,16 @@ account_name_variations = {
     "nike/nalc": "Nike",
     "Nike/Adapt": "Nike",
     "nike/adapt": "Nike",
+    
+    # New accounts from CSV (5)
+    "Merck CBRE": "Merck CBRE",  # Separate account from Merck Sodexo
+    "merck cbre": "Merck CBRE",
+    "Takeda (CBRE)": "Takeda Pharmaceutical",
+    "takeda (cbre)": "Takeda Pharmaceutical",
+    "Honda": "Honda Motor Company",
+    "honda": "Honda Motor Company",
+    "Gilead": "Gilead Sciences",
+    "gilead": "Gilead Sciences",
+    "Gilead Oceanside": "Gilead Sciences",  # Maps to same account as Gilead
+    "gilead oceanside": "Gilead Sciences",
 }

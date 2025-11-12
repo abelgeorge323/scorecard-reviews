@@ -77,7 +77,7 @@ def clean_text(text):
         '\x92': "'",  # Another apostrophe variant
         '\x93': '"',  # Opening smart quote
         '\x94': '"',  # Closing smart quote
-        '\x96': '–',  # En dash
+        '\x96': '–',  # En dasha
         '\x97': '—',  # Em dash
         '\x91': "'",  # Left single quote
         '\u2018': "'",  # Left single quotation mark
@@ -96,7 +96,7 @@ def clean_text(text):
 @st.cache_data(ttl=60)  # Cache for 60 seconds only
 def load_data():
     """Load and process the CSV data with caching"""
-    csv_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (4).csv")
+    csv_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
     
     if not csv_path.exists():
         st.error(f"CSV file not found at: {csv_path}")

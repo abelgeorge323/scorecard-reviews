@@ -124,10 +124,13 @@ def load_data(month=None):
     if month:
         # Load specific month file
         if month == "November_2025":
-            # Check for legacy file format first
-            legacy_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
-            if legacy_path.exists():
-                csv_path = legacy_path
+            # Check for legacy file format first - try file (8) first, then (5), then new format
+            legacy_path_8 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (8).csv")
+            legacy_path_5 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
+            if legacy_path_8.exists():
+                csv_path = legacy_path_8
+            elif legacy_path_5.exists():
+                csv_path = legacy_path_5
             else:
                 csv_path = scorecards_dir / f"{month}_Scorecards.csv"
         else:
@@ -138,17 +141,25 @@ def load_data(month=None):
         if available_months:
             month_key = available_months[0]
             if month_key == "November_2025":
-                # Check for legacy file format first
-                legacy_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
-                if legacy_path.exists():
-                    csv_path = legacy_path
+                # Check for legacy file format first - try file (8) first, then (5), then new format
+                legacy_path_8 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (8).csv")
+                legacy_path_5 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
+                if legacy_path_8.exists():
+                    csv_path = legacy_path_8
+                elif legacy_path_5.exists():
+                    csv_path = legacy_path_5
                 else:
                     csv_path = scorecards_dir / f"{month_key}_Scorecards.csv"
             else:
                 csv_path = scorecards_dir / f"{month_key}_Scorecards.csv"
         else:
-            # Fallback to current file format
-            csv_path = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
+            # Fallback to current file format - try file (8) first, then (5)
+            legacy_path_8 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (8).csv")
+            legacy_path_5 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
+            if legacy_path_8.exists():
+                csv_path = legacy_path_8
+            else:
+                csv_path = legacy_path_5
     
     if not csv_path.exists():
         # Return None if file doesn't exist (for blank state)

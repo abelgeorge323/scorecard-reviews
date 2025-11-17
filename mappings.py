@@ -154,4 +154,10 @@ account_name_variations = {
     "gilead": "Gilead Sciences",
     "Gilead Oceanside": "Gilead Sciences",  # Maps to same account as Gilead
     "gilead oceanside": "Gilead Sciences",
+    
+    # New accounts from CSV (8)
+    "BMS": "Bristol Myers Squibb",  # Abbreviation for Bristol Myers Squibb
+    "bms": "Bristol Myers Squibb",
+    "Google Bay & San Francisco": "Google",  # Google location variant
+    "google bay & san francisco": "Google",
 }

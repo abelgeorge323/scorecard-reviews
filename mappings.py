@@ -26,21 +26,20 @@ account_to_vertical = {
     "Nestle": "Manufacturing",                 # Kim Wittekind
     "Westinghouse": "Manufacturing",           # Ayesha Nasir
     "Micron Tech": "Manufacturing",            # Siddarth Shah (Manufacturing vertical)
+    "Intel": "Manufacturing",                  # Jeremy Johnson / Alex Kennedy
+    "LAM Research": "Manufacturing",           # Mark Schlerf / Jose Torres
 
     # 💻 Technology — (Vertical Leaders: Dan Hartman / Ryan Blackwood)
     "Microsoft": "Technology",                 # Shane Follmann / Taylor Wattenberg / Ivan Taminez
     "Meta": "Technology",                      # Luna Duarte / Grant Frazier
-    "Intel": "Technology",                     # Jeremy Johnson / Alex Kennedy
     "Amazon": "Technology",                    # Keith Deuber / Dustin Smith (Global Accounts)
     "Amazon Office": "Technology",             # Sub-account of Amazon Global Accounts
     "Google": "Technology",                    # Ryan Blackwood / Caren Courtney / Ana Sabater
     "NVIDIA": "Technology",                    # Stuart Kelloff
     "Adobe Systems": "Technology",             # Zane Hauck / Stuart Kelloff
     "LinkedIn": "Technology",                  # Ryan Blackwood cluster
-    "LAM Research": "Technology",              # Mark Schlerf / Jose Torres
     "IBM": "Technology",                       # IBM – Technology vertical cluster
     "Uber": "Technology",                      # ✅ Ryan Blackwood / Ana Sabater
-    # note: LAM Research verified in Technology section of PDF
 
     # 💊 Life Science — (Vertical Leader: Dan Hartman)
     "Merck": "Life Science",                   # Brian Davis / Dave Pergola / Justin Homa
@@ -60,6 +59,10 @@ account_to_vertical = {
     "Novartis": "Life Science",                # Mike Barry
     "Johnson & Johnson": "Life Science",       # Isaac Calderon
     "AbbVie": "Life Science",                  # Corey Wallace (Life Science vertical)
+    "Thermo Fisher Scientific API": "Life Science",
+    "Cardinal Health": "Life Science",
+    "IQVIA": "Life Science",
+    "McKesson": "Life Science",
 
     # 💰 Finance — (Vertical Leaders: Peggy Shum / Tiffany Purifoy)
     "Wells Fargo": "Finance",                  # Colleen Doles / Eduardo Sanchez
@@ -67,6 +70,11 @@ account_to_vertical = {
     "Deutsche Bank": "Finance",                # Peggy Shum
     "CIGNA": "Finance",                        # Julie Bianchi
     "USAA": "Finance",                         # Nashir Carabali
+    "Elevance": "Finance",
+    "Fidelity": "Finance",
+    "State Farm": "Finance",
+    "Citibank": "Finance",
+    "T.Rowe Price": "Finance",
 
     # 📦 Distribution — (Vertical Leader: TBD)
     "Nike": "Distribution",  # Includes DHL, GXO Relay, GXO Connect, NALC, Adapt locations
@@ -142,6 +150,21 @@ account_name_variations = {
     "nike/nalc": "Nike",
     "Nike/Adapt": "Nike",
     "nike/adapt": "Nike",
+    # Additional Nike variations from December 2025
+    "Nike Adapt": "Nike",
+    "nike adapt": "Nike",
+    "Relay": "Nike",  # From GXO/Nike
+    "relay": "Nike",
+    "Connect": "Nike",  # From GXO/Nike
+    "connect": "Nike",
+    "NIKE/DHL Dash": "Nike",
+    "nike/dhl dash": "Nike",
+    
+    # Lonza variations
+    "Lonza JLL": "Lonza Biologics",
+    "lonza jll": "Lonza Biologics",
+    "Lonza": "Lonza Biologics",  # In case it's just "Lonza"
+    "lonza": "Lonza Biologics",
     
     # New accounts from CSV (5)
     "Merck CBRE": "Merck CBRE",  # Separate account from Merck Sodexo
@@ -160,4 +183,32 @@ account_name_variations = {
     "bms": "Bristol Myers Squibb",
     "Google Bay & San Francisco": "Google",  # Google location variant
     "google bay & san francisco": "Google",
+    
+    # December 2025 additions
+    "BI": "Boehringer Ingelheim",  # Short form for Boehringer Ingelheim
+    "bi": "Boehringer Ingelheim",
+    "Altera": "Intel",  # Intel location
+    "altera": "Intel",
+    "CBRE/Nvidia": "NVIDIA",  # NVIDIA location variant
+    "cbre/nvidia": "NVIDIA",
+    "Thermo Fisher Scientific API": "Thermo Fisher Scientific API",
+    "thermo fisher scientific api": "Thermo Fisher Scientific API",
+    "Cardinal Health": "Cardinal Health",
+    "cardinal health": "Cardinal Health",
+    "IQVIA": "IQVIA",
+    "iqvia": "IQVIA",
+    "McKesson": "McKesson",
+    "mckesson": "McKesson",
+    "Elevance": "Elevance",
+    "elevance": "Elevance",
+    "Fidelity": "Fidelity",
+    "fidelity": "Fidelity",
+    "State Farm": "State Farm",
+    "state farm": "State Farm",
+    "Citibank": "Citibank",
+    "citibank": "Citibank",
+    "T.Rowe Price": "T.Rowe Price",
+    "t.rowe price": "T.Rowe Price",
+    "T Rowe Price": "T.Rowe Price",  # Variation without period
+    "t rowe price": "T.Rowe Price",
 }

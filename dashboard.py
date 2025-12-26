@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import re
+from collections import Counter
 
 # Import mappings
 from mappings import account_to_vertical, account_name_variations
@@ -110,10 +111,20 @@ def get_available_months():
     # Also check for legacy files (current format)
     legacy_files = list(scorecards_dir.glob("Scorecard Review Executive Summary*.csv"))
     if legacy_files:
-        # Check for file (10) - December 2025
-        file_10 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (10).csv"
-        if file_10.exists() and "December_2025" not in months:
+        # Check for file (12) - December 2025 (newest)
+        file_12 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (12).csv"
+        if file_12.exists() and "December_2025" not in months:
             months.append("December_2025")
+        # Check for file (11) - December 2025 (fallback)
+        elif not file_12.exists():
+            file_11 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (11).csv"
+            if file_11.exists() and "December_2025" not in months:
+                months.append("December_2025")
+            # Check for file (10) - December 2025 (fallback)
+            elif not file_11.exists():
+                file_10 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (10).csv"
+                if file_10.exists() and "December_2025" not in months:
+                    months.append("December_2025")
         # Check for file (8) - November 2025
         file_8 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (8).csv"
         if file_8.exists() and "November_2025" not in months:
@@ -132,9 +143,15 @@ def load_data(month=None):
     if month:
         # Load specific month file
         if month == "December_2025":
-            # Check for file (10) first, then new format
+            # Check for file (12) first (newest), then (11), then (10), then new format
+            legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
+            legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
             legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
-            if legacy_path_10.exists():
+            if legacy_path_12.exists():
+                csv_path = legacy_path_12
+            elif legacy_path_11.exists():
+                csv_path = legacy_path_11
+            elif legacy_path_10.exists():
                 csv_path = legacy_path_10
             else:
                 csv_path = scorecards_dir / f"{month}_Scorecards.csv"
@@ -156,9 +173,15 @@ def load_data(month=None):
             if available_months:
                 month_key = available_months[0]
                 if month_key == "December_2025":
-                    # Check for file (10) first, then new format
+                    # Check for file (12) first (newest), then (11), then (10), then new format
+                    legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
+                    legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
                     legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
-                    if legacy_path_10.exists():
+                    if legacy_path_12.exists():
+                        csv_path = legacy_path_12
+                    elif legacy_path_11.exists():
+                        csv_path = legacy_path_11
+                    elif legacy_path_10.exists():
                         csv_path = legacy_path_10
                     else:
                         csv_path = scorecards_dir / f"{month_key}_Scorecards.csv"
@@ -175,11 +198,17 @@ def load_data(month=None):
                 else:
                     csv_path = scorecards_dir / f"{month_key}_Scorecards.csv"
             else:
-                # Fallback to current file format - try file (10) first, then (8), then (5)
+                # Fallback to current file format - try file (12) first, then (11), then (10), then (8), then (5)
+                legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
+                legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
                 legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
                 legacy_path_8 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (8).csv")
                 legacy_path_5 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
-                if legacy_path_10.exists():
+                if legacy_path_12.exists():
+                    csv_path = legacy_path_12
+                elif legacy_path_11.exists():
+                    csv_path = legacy_path_11
+                elif legacy_path_10.exists():
                     csv_path = legacy_path_10
                 elif legacy_path_8.exists():
                     csv_path = legacy_path_8
@@ -796,6 +825,413 @@ def render_december_detail_view(account, data):
     st.markdown("### Action Items")
     st.write(data.get('action_items', 'N/A'))
 
+def render_december_insights(processed_df, all_accounts, accounts_with_data):
+    """Render insights page for December 2025"""
+    st.subheader("December Insights")
+    
+    # Key Counts Section
+    st.markdown("### Key Statistics")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    total_accounts_with_data = len(accounts_with_data)
+    unique_ifms = set()
+    for account_data in accounts_with_data.values():
+        ifm = account_data.get('ifm', '')
+        if ifm and str(ifm).strip():
+            unique_ifms.add(str(ifm).strip())
+    
+    unique_verticals = set()
+    for account_data in accounts_with_data.values():
+        vertical = account_data.get('vertical', '')
+        if vertical:
+            unique_verticals.add(vertical)
+    
+    total_responses = sum(v['response_count'] for v in accounts_with_data.values())
+    
+    with col1:
+        st.metric("Accounts with Data", total_accounts_with_data)
+        st.caption(f"There are **{total_accounts_with_data}** accounts with scorecard data")
+    
+    with col2:
+        st.metric("IFM Types", len(unique_ifms))
+        st.caption(f"There are **{len(unique_ifms)}** unique IFM types")
+    
+    with col3:
+        st.metric("Verticals", len(unique_verticals))
+        st.caption(f"There are **{len(unique_verticals)}** verticals represented")
+    
+    with col4:
+        st.metric("Total Responses", total_responses)
+        st.caption(f"There are **{total_responses}** total responses")
+    
+    st.markdown("---")
+    
+    # IFM Breakdown
+    st.markdown("### IFM Distribution")
+    ifm_counts = {}
+    ifm_scores = {}
+    
+    for account_data in accounts_with_data.values():
+        ifm = account_data.get('ifm', '')
+        if ifm and str(ifm).strip():
+            ifm_clean = str(ifm).strip()
+            if ifm_clean not in ifm_counts:
+                ifm_counts[ifm_clean] = 0
+                ifm_scores[ifm_clean] = []
+            ifm_counts[ifm_clean] += 1
+            score = account_data.get('score')
+            if score is not None:
+                ifm_scores[ifm_clean].append(score)
+    
+    if ifm_counts:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**Accounts per IFM:**")
+            for ifm, count in sorted(ifm_counts.items(), key=lambda x: x[1], reverse=True):
+                avg_score = sum(ifm_scores[ifm]) / len(ifm_scores[ifm]) if ifm_scores[ifm] else None
+                score_text = f" (Avg: {avg_score:.2f})" if avg_score else ""
+                st.write(f"- **{ifm}**: {count} account{'s' if count > 1 else ''}{score_text}")
+        
+        with col2:
+            # IFM distribution chart
+            if len(ifm_counts) > 0:
+                ifm_df = pd.DataFrame({
+                    'IFM': list(ifm_counts.keys()),
+                    'Count': list(ifm_counts.values())
+                })
+                fig = px.bar(ifm_df, x='IFM', y='Count', 
+                            title="Accounts by IFM Type",
+                            labels={'IFM': 'IFM Type', 'Count': 'Number of Accounts'})
+                fig.update_layout(showlegend=False, height=300)
+                st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No IFM data available")
+    
+    st.markdown("---")
+    
+    # Score by Vertical
+    st.markdown("### Score by Vertical")
+    vertical_scores = {}
+    vertical_counts = {}
+    
+    for account_data in accounts_with_data.values():
+        vertical = account_data.get('vertical', '')
+        score = account_data.get('score')
+        if vertical and score is not None:
+            if vertical not in vertical_scores:
+                vertical_scores[vertical] = []
+                vertical_counts[vertical] = 0
+            vertical_scores[vertical].append(score)
+            vertical_counts[vertical] += 1
+    
+    if vertical_scores:
+        # Calculate averages
+        vertical_avg = {v: sum(scores) / len(scores) for v, scores in vertical_scores.items()}
+        
+        # Sort by average score
+        sorted_verticals = sorted(vertical_avg.items(), key=lambda x: x[1], reverse=True)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**Average Score by Vertical:**")
+            for vertical, avg_score in sorted_verticals:
+                count = vertical_counts[vertical]
+                st.write(f"- **{vertical}**: {avg_score:.2f} ({count} account{'s' if count > 1 else ''})")
+        
+        with col2:
+            # Score by vertical chart
+            vert_df = pd.DataFrame({
+                'Vertical': list(vertical_avg.keys()),
+                'Average Score': list(vertical_avg.values())
+            })
+            vert_df = vert_df.sort_values('Average Score', ascending=True)
+            
+            fig = px.bar(vert_df, x='Average Score', y='Vertical', 
+                        orientation='h',
+                        title="Average Score by Vertical",
+                        labels={'Average Score': 'Average Score', 'Vertical': 'Vertical'})
+            fig.update_layout(showlegend=False, height=300)
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No score data available by vertical")
+    
+    st.markdown("---")
+    
+    # Feedback Analysis
+    st.markdown("### Feedback Analysis")
+    
+    # Collect all feedback
+    all_feedback = []
+    for account_data in accounts_with_data.values():
+        feedback = account_data.get('feedback', '')
+        if feedback and str(feedback).strip() and str(feedback).strip() != 'N/A':
+            all_feedback.append(str(feedback).strip())
+    
+    if all_feedback:
+        # Simple keyword extraction
+        # Common positive/negative words
+        positive_words = ['excellent', 'great', 'good', 'appreciate', 'thank', 'satisfied', 'pleased', 'outstanding', 'wonderful', 'fantastic']
+        negative_words = ['concern', 'issue', 'problem', 'challenge', 'difficult', 'need', 'improve', 'better', 'worry']
+        
+        all_text = ' '.join(all_feedback).lower()
+        
+        # Count positive/negative mentions
+        positive_count = sum(1 for word in positive_words if word in all_text)
+        negative_count = sum(1 for word in negative_words if word in all_text)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**Feedback Themes:**")
+            st.write(f"- **Positive mentions**: {positive_count}")
+            st.write(f"- **Areas for improvement**: {negative_count}")
+            st.write(f"- **Total feedback entries**: {len(all_feedback)}")
+        
+        with col2:
+            # Show sample feedback snippets
+            st.markdown("**Sample Feedback:**")
+            # Show first 3 non-empty feedback entries (truncated)
+            shown = 0
+            for feedback in all_feedback[:5]:
+                if shown < 3 and len(feedback) > 20:
+                    preview = feedback[:150] + "..." if len(feedback) > 150 else feedback
+                    st.caption(f'"{preview}"')
+                    shown += 1
+        
+    else:
+        st.info("No feedback data available")
+    
+    st.markdown("---")
+    
+    # Risk Indicators (Accounts < 4.5)
+    st.markdown("### Risk Indicators")
+    at_risk_accounts = []
+    for account, account_data in accounts_with_data.items():
+        score = account_data.get('score')
+        if score is not None and score < 4.5:
+            at_risk_accounts.append({
+                'account': account,
+                'score': score,
+                'vertical': account_data.get('vertical', 'N/A'),
+                'ifm': account_data.get('ifm', 'N/A')
+            })
+    
+    if at_risk_accounts:
+        st.warning(f"**{len(at_risk_accounts)}** accounts with scores below 4.5 need attention")
+        
+        # Sort by score (lowest first)
+        at_risk_accounts.sort(key=lambda x: x['score'])
+        
+        st.markdown("**Accounts Needing Attention (< 4.5):**")
+        for risk in at_risk_accounts[:10]:  # Show top 10
+            st.write(f"- **{risk['account']}**: {risk['score']:.2f} ({risk['vertical']})")
+        if len(at_risk_accounts) > 10:
+            st.caption(f"... and {len(at_risk_accounts) - 10} more")
+    else:
+        st.success("All accounts have scores of 4.5 or higher!")
+    
+    st.markdown("---")
+    
+    # Action Items Analysis
+    st.markdown("### Action Items Analysis")
+    all_action_items = []
+    for account, account_data in accounts_with_data.items():
+        action_items = account_data.get('action_items', '')
+        if action_items and str(action_items).strip() and str(action_items).strip() != 'N/A':
+            all_action_items.append({
+                'text': str(action_items).strip(),
+                'account': account
+            })
+    
+    if all_action_items:
+        st.write(f"**{len(all_action_items)}** accounts have action items")
+        
+        # Extract common themes/keywords from action items
+        all_ai_text = ' '.join([ai['text'].lower() for ai in all_action_items])
+        
+        # Common action item keywords
+        common_keywords = ['follow', 'review', 'update', 'meet', 'discuss', 'provide', 'schedule', 'complete', 'address', 'resolve']
+        keyword_counts = {kw: all_ai_text.count(kw) for kw in common_keywords if all_ai_text.count(kw) > 0}
+        
+        if keyword_counts:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**Common Action Themes:**")
+                for keyword, count in sorted(keyword_counts.items(), key=lambda x: x[1], reverse=True)[:5]:
+                    st.write(f"- **{keyword.title()}**: mentioned {count} time{'s' if count > 1 else ''}")
+            
+            with col2:
+                # Show sample action items
+                st.markdown("**Sample Action Items:**")
+                shown = 0
+                for ai in all_action_items[:5]:
+                    if shown < 3 and len(ai['text']) > 20:
+                        preview = ai['text'][:120] + "..." if len(ai['text']) > 120 else ai['text']
+                        st.caption(f'"{preview}"')
+                        shown += 1
+    else:
+        st.info("No action items data available")
+    
+    st.markdown("---")
+    
+    # Month-over-Month Comparison (if November data exists)
+    st.markdown("### Month-over-Month Comparison")
+    available_months = get_available_months()
+    
+    if "November_2025" in available_months:
+        # Load November data for comparison
+        nov_raw_df = load_data(month="November_2025")
+        if nov_raw_df is not None:
+            nov_processed_df = process_data(nov_raw_df, month="November_2025")
+            nov_all_accounts = get_all_accounts_with_data(nov_processed_df)
+            nov_accounts_with_data = {k: v for k, v in nov_all_accounts.items() if v['has_data']}
+            
+            # Compare metrics
+            dec_scores = [v['score'] for v in accounts_with_data.values() if v.get('score') is not None]
+            nov_scores = [v['score'] for v in nov_accounts_with_data.values() if v.get('score') is not None]
+            
+            if dec_scores and nov_scores:
+                dec_avg = sum(dec_scores) / len(dec_scores)
+                nov_avg = sum(nov_scores) / len(nov_scores)
+                score_change = dec_avg - nov_avg
+                
+                dec_count = len(accounts_with_data)
+                nov_count = len(nov_accounts_with_data)
+                count_change = dec_count - nov_count
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Average Score", f"{dec_avg:.2f}", 
+                             delta=f"{score_change:+.2f}" if score_change != 0 else "0.00",
+                             delta_color="normal" if abs(score_change) < 0.1 else ("inverse" if score_change < 0 else "normal"))
+                    st.caption(f"November: {nov_avg:.2f}")
+                
+                with col2:
+                    st.metric("Accounts with Data", dec_count,
+                             delta=f"{count_change:+d}" if count_change != 0 else "0",
+                             delta_color="normal")
+                    st.caption(f"November: {nov_count}")
+                
+                with col3:
+                    dec_responses = sum(v['response_count'] for v in accounts_with_data.values())
+                    nov_responses = sum(v['response_count'] for v in nov_accounts_with_data.values())
+                    response_change = dec_responses - nov_responses
+                    st.metric("Total Responses", dec_responses,
+                             delta=f"{response_change:+d}" if response_change != 0 else "0",
+                             delta_color="normal")
+                    st.caption(f"November: {nov_responses}")
+                
+                # Account-level comparison - Biggest Risers and Droppers
+                # Match accounts by base name (strip IFM suffixes for December)
+                def get_base_account_name(account_name):
+                    """Extract base account name, removing IFM suffix like (CBRE)"""
+                    if '(' in account_name and ')' in account_name:
+                        # Remove IFM suffix like "Account (IFM)"
+                        return account_name.split('(')[0].strip()
+                    return account_name
+                
+                # Create mapping of base names to full account names
+                dec_base_to_full = {get_base_account_name(acc): acc for acc in accounts_with_data.keys()}
+                nov_base_to_full = {get_base_account_name(acc): acc for acc in nov_accounts_with_data.keys()}
+                
+                # Find common base account names
+                common_base_accounts = set(dec_base_to_full.keys()) & set(nov_base_to_full.keys())
+                score_changes = []
+                
+                for base_account in common_base_accounts:
+                    dec_full = dec_base_to_full[base_account]
+                    nov_full = nov_base_to_full[base_account]
+                    dec_score = accounts_with_data[dec_full].get('score')
+                    nov_score = nov_accounts_with_data[nov_full].get('score')
+                    if dec_score is not None and nov_score is not None:
+                        change = dec_score - nov_score
+                        score_changes.append({
+                            'account': base_account,  # Use base name for display
+                            'dec_full': dec_full,  # Keep full name for reference
+                            'nov_full': nov_full,
+                            'dec_score': dec_score,
+                            'nov_score': nov_score,
+                            'change': change,
+                            'vertical': accounts_with_data[dec_full].get('vertical', 'N/A')
+                        })
+                
+                if score_changes:
+                    # Sort by change (biggest increases first, then biggest decreases)
+                    score_changes.sort(key=lambda x: x['change'], reverse=True)
+                    
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**Biggest Risers:**")
+                        risers = [sc for sc in score_changes if sc['change'] > 0]
+                        if risers:
+                            for sc in risers[:5]:
+                                st.write(f"- **{sc['account']}**: {sc['nov_score']:.2f} → {sc['dec_score']:.2f} (+{sc['change']:.2f})")
+                        else:
+                            st.write("No score increases this month")
+                    
+                    with col2:
+                        st.markdown("**Biggest Droppers:**")
+                        droppers = [sc for sc in score_changes if sc['change'] < 0]
+                        if droppers:
+                            # Sort droppers by change (most negative first)
+                            droppers.sort(key=lambda x: x['change'])
+                            for sc in droppers[:5]:
+                                st.write(f"- **{sc['account']}**: {sc['nov_score']:.2f} → {sc['dec_score']:.2f} ({sc['change']:.2f})")
+                        else:
+                            st.write("No score decreases this month")
+                
+                # Find and display BI (Boehringer Ingelheim) score for both months
+                st.markdown("---")
+                st.markdown("**Boehringer Ingelheim (BI) Score:**")
+                
+                # Check for BI in both months (handle IFM suffixes like "Boehringer Ingelheim (CBRE)")
+                bi_dec = None
+                bi_nov = None
+                bi_dec_account = None
+                bi_nov_account = None
+                
+                # Check December - look for any account containing "boehringer"
+                for account in accounts_with_data.keys():
+                    account_lower = account.lower()
+                    if 'boehringer' in account_lower:
+                        bi_dec = accounts_with_data[account].get('score')
+                        bi_dec_account = account
+                        break
+                
+                # Check November
+                for account in nov_accounts_with_data.keys():
+                    account_lower = account.lower()
+                    if 'boehringer' in account_lower:
+                        bi_nov = nov_accounts_with_data[account].get('score')
+                        bi_nov_account = account
+                        break
+                
+                if bi_dec is not None or bi_nov is not None:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if bi_dec is not None:
+                            st.write(f"**December**: {bi_dec:.2f}")
+                        else:
+                            st.write("**December**: No data")
+                    with col2:
+                        if bi_nov is not None:
+                            st.write(f"**November**: {bi_nov:.2f}")
+                            if bi_dec is not None:
+                                bi_change = bi_dec - bi_nov
+                                change_text = f"({bi_change:+.2f})" if bi_change != 0 else "(no change)"
+                                st.caption(f"Change: {change_text}")
+                        else:
+                            st.write("**November**: No data")
+        else:
+            st.info("November data could not be loaded for comparison")
+    else:
+        st.info("November 2025 data not available for comparison")
+    
+
 def render_account_card(account, data, month=None):
     """Render a single account card with clickable button"""
     vertical_color = get_vertical_color(data['vertical'])
@@ -1121,23 +1557,46 @@ def main():
         st.session_state['switch_to_data_tab'] = False
     
     # Navigation buttons with sticky positioning
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("Account Cards", use_container_width=True, type="primary" if st.session_state['current_view'] == 'cards' else "secondary", key="nav_cards"):
-            st.session_state['current_view'] = 'cards'
-            st.session_state['selected_account'] = None
-            # Reset filters when going back to Account Cards
-            st.session_state.just_cleared_filters = True
-            st.rerun()
-    with col2:
-        if st.button("Data Table", use_container_width=True, type="primary" if st.session_state['current_view'] == 'data' else "secondary", key="nav_data"):
-            st.session_state['current_view'] = 'data'
-            st.rerun()
-    with col3:
-        if st.button("Accounts Without Data", use_container_width=True, type="primary" if st.session_state['current_view'] == 'no_data' else "secondary", key="nav_nodata"):
-            st.session_state['current_view'] = 'no_data'
-            st.session_state['selected_account'] = None
-            st.rerun()
+    is_december = (selected_month_key == "December_2025")
+    
+    if is_december:
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            if st.button("Account Cards", use_container_width=True, type="primary" if st.session_state['current_view'] == 'cards' else "secondary", key="nav_cards"):
+                st.session_state['current_view'] = 'cards'
+                st.session_state['selected_account'] = None
+                st.session_state.just_cleared_filters = True
+                st.rerun()
+        with col2:
+            if st.button("Data Table", use_container_width=True, type="primary" if st.session_state['current_view'] == 'data' else "secondary", key="nav_data"):
+                st.session_state['current_view'] = 'data'
+                st.rerun()
+        with col3:
+            if st.button("Insights", use_container_width=True, type="primary" if st.session_state['current_view'] == 'insights' else "secondary", key="nav_insights"):
+                st.session_state['current_view'] = 'insights'
+                st.rerun()
+        with col4:
+            if st.button("Accounts Without Data", use_container_width=True, type="primary" if st.session_state['current_view'] == 'no_data' else "secondary", key="nav_nodata"):
+                st.session_state['current_view'] = 'no_data'
+                st.session_state['selected_account'] = None
+                st.rerun()
+    else:
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("Account Cards", use_container_width=True, type="primary" if st.session_state['current_view'] == 'cards' else "secondary", key="nav_cards"):
+                st.session_state['current_view'] = 'cards'
+                st.session_state['selected_account'] = None
+                st.session_state.just_cleared_filters = True
+                st.rerun()
+        with col2:
+            if st.button("Data Table", use_container_width=True, type="primary" if st.session_state['current_view'] == 'data' else "secondary", key="nav_data"):
+                st.session_state['current_view'] = 'data'
+                st.rerun()
+        with col3:
+            if st.button("Accounts Without Data", use_container_width=True, type="primary" if st.session_state['current_view'] == 'no_data' else "secondary", key="nav_nodata"):
+                st.session_state['current_view'] = 'no_data'
+                st.session_state['selected_account'] = None
+                st.rerun()
     
     st.markdown("---")
     
@@ -1254,6 +1713,13 @@ def main():
                 if st.button("🔄 Clear Selection"):
                     st.session_state['selected_account'] = None
                     st.rerun()
+    
+    elif st.session_state['current_view'] == 'insights':
+        # Only show insights for December
+        if selected_month_key == "December_2025":
+            render_december_insights(processed_df, all_accounts, accounts_with_data)
+        else:
+            st.info("Insights are only available for December 2025 data.")
     
     elif st.session_state['current_view'] == 'no_data':
         st.subheader("Accounts Without Data")

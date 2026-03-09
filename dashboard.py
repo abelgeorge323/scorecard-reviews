@@ -11,6 +11,25 @@ from collections import Counter
 # Import mappings
 from mappings import account_to_vertical, account_name_variations
 
+# Month key -> (year, month) for chronological sort (most recent first)
+MONTH_TO_YEAR_MONTH = {
+    "November_2025": (2025, 11),
+    "December_2025": (2025, 12),
+    "January_2026": (2026, 1),
+    "February_2026": (2026, 2),
+    "March_2026": (2026, 3),
+}
+
+# Scorecard label -> conduct month (when reviews are submitted). Reviews conducted in March = February scorecards, etc.
+CONDUCT_MONTH_FOR_LABEL = {
+    "February_2026": (2026, 3),   # February scorecards reviewed in March
+    "March_2026": (2026, 4),      # March scorecards reviewed in April
+}
+
+def _month_sort_key(month_key):
+    """Sort key for month keys: (year, month) so reverse=True gives most recent first."""
+    return MONTH_TO_YEAR_MONTH.get(month_key, (0, 0))
+
 # Page configuration
 st.set_page_config(
     page_title="SBM Scorecard Review",
@@ -111,12 +130,13 @@ def get_available_months():
     # Also check for legacy files (current format)
     legacy_files = list(scorecards_dir.glob("Scorecard Review Executive Summary*.csv"))
     if legacy_files:
-        # Check for file (14) first, then (13) - contains December 2025, January 2026, February 2026, March 2026
+        # Check for file (15) first, then (14), then (13) - contains December 2025 through March 2026
+        file_15 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (15).csv"
         file_14 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (14).csv"
         file_13 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (13).csv"
-        file_ls = scorecards_dir / "Scorecard Review Executive Summary(1-59).csv"  # Life science specific (Feb/March)
+        file_ls = scorecards_dir / "Scorecard Review Executive Summary(1-59).csv"  # Life science (Feb/March)
         file_12 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (12).csv"
-        if file_14.exists() or file_13.exists():
+        if file_15.exists() or file_14.exists() or file_13.exists():
             if "March_2026" not in months:
                 months.append("March_2026")
             if "February_2026" not in months:
@@ -148,49 +168,46 @@ def get_available_months():
         elif "November_2025" not in months and "December_2025" not in months:
             months.append("November_2025")
     
-    return sorted(months, reverse=True)  # Most recent first
+    return sorted(months, key=_month_sort_key, reverse=True)  # Most recent first
 
-def _load_and_normalize_life_science_csv(month, main_df_columns):
-    """Load life science specific CSV (1-59), filter to Feb or March 2026, normalize to main schema. Returns DataFrame or None."""
-    scorecards_dir = Path("Scorecards")
-    path_ls = scorecards_dir / "Scorecard Review Executive Summary(1-59).csv"
-    if not path_ls.exists():
+def _load_and_normalize_supplemental_csv(csv_path, month, main_df_columns):
+    """Load a supplemental CSV (same format as 1-59 or 2(Sheet1)), filter by conduct month, normalize to main schema. Returns DataFrame or None."""
+    if not csv_path.exists():
         return None
-    target_month = 2 if month == "February_2026" else (3 if month == "March_2026" else None)
+    conduct = CONDUCT_MONTH_FOR_LABEL.get(month)
+    target_year, target_month = conduct if conduct else (None, None)
     if target_month is None:
         return None
     encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1252', 'windows-1252']
     for enc in encodings:
         try:
-            df_ls = pd.read_csv(path_ls, encoding=enc)
-            for col in df_ls.columns:
-                if df_ls[col].dtype == 'object':
-                    df_ls[col] = df_ls[col].apply(clean_text)
+            df_sup = pd.read_csv(csv_path, encoding=enc)
+            for col in df_sup.columns:
+                if df_sup[col].dtype == 'object':
+                    df_sup[col] = df_sup[col].apply(clean_text)
             break
         except (UnicodeDecodeError, Exception):
             continue
     else:
         return None
-    if 'Start time' not in df_ls.columns or len(df_ls) == 0:
+    if 'Start time' not in df_sup.columns or len(df_sup) == 0:
         return None
-    start_series = pd.to_datetime(df_ls['Start time'], errors='coerce')
-    mask = start_series.notna() & (start_series.dt.year == 2026) & (start_series.dt.month == target_month)
-    df_ls = df_ls[mask].copy()
-    if len(df_ls) == 0:
+    start_series = pd.to_datetime(df_sup['Start time'], errors='coerce')
+    mask = start_series.notna() & (start_series.dt.year == target_year) & (start_series.dt.month == target_month)
+    df_sup = df_sup[mask].copy()
+    if len(df_sup) == 0:
         return None
-    # Align to main CSV: rename ID -> Id, "Who is your FM?" -> "Who is Your IFM"
-    if 'ID' in df_ls.columns:
-        df_ls = df_ls.rename(columns={'ID': 'Id'})
-    for c in list(df_ls.columns):
+    if 'ID' in df_sup.columns:
+        df_sup = df_sup.rename(columns={'ID': 'Id'})
+    for c in list(df_sup.columns):
         if 'Who is your FM' in c and 'IFM' not in c:
-            df_ls = df_ls.rename(columns={c: 'Who is Your IFM'})
+            df_sup = df_sup.rename(columns={c: 'Who is Your IFM'})
             break
-    # Copy base columns to "1" suffix columns so process_data (new-format) reads them
     for col in main_df_columns:
-        if col not in df_ls.columns and col.endswith('1') and col[:-1] in df_ls.columns:
-            df_ls[col] = df_ls[col[:-1]].values
-    df_ls = df_ls.reindex(columns=main_df_columns)
-    return df_ls
+        if col not in df_sup.columns and col.endswith('1') and col[:-1] in df_sup.columns:
+            df_sup[col] = df_sup[col[:-1]].values
+    df_sup = df_sup.reindex(columns=main_df_columns)
+    return df_sup
 
 @st.cache_data(ttl=60)  # Cache for 60 seconds only
 def load_data(month=None):
@@ -200,13 +217,16 @@ def load_data(month=None):
     if month:
         # Load specific month file
         if month in ("December_2025", "January_2026", "February_2026", "March_2026"):
-            # Same CSV: (14) newest, then (13), (12), (11), (10)
+            # Same CSV: (15) newest, then (14), (13), (12), (11), (10)
+            legacy_path_15 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (15).csv")
             legacy_path_14 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (14).csv")
             legacy_path_13 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (13).csv")
             legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
             legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
             legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
-            if legacy_path_14.exists():
+            if legacy_path_15.exists():
+                csv_path = legacy_path_15
+            elif legacy_path_14.exists():
                 csv_path = legacy_path_14
             elif legacy_path_13.exists():
                 csv_path = legacy_path_13
@@ -264,7 +284,8 @@ def load_data(month=None):
                 else:
                     csv_path = scorecards_dir / f"{month_key}_Scorecards.csv"
             else:
-                # Fallback to current file format - try file (14) first, then (13), (12), (11), (10), (8), (5)
+                # Fallback to current file format - try file (15) first, then (14), (13), (12), (11), (10), (8), (5)
+                legacy_path_15 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (15).csv")
                 legacy_path_14 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (14).csv")
                 legacy_path_13 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (13).csv")
                 legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
@@ -272,7 +293,9 @@ def load_data(month=None):
                 legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
                 legacy_path_8 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (8).csv")
                 legacy_path_5 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
-                if legacy_path_14.exists():
+                if legacy_path_15.exists():
+                    csv_path = legacy_path_15
+                elif legacy_path_14.exists():
                     csv_path = legacy_path_14
                 elif legacy_path_13.exists():
                     csv_path = legacy_path_13
@@ -303,11 +326,16 @@ def load_data(month=None):
                 if df[col].dtype == 'object':  # String columns
                     df[col] = df[col].apply(clean_text)
             
-            # For February/March 2026, merge life science specific CSV (1-59) - same format, life science accounts only
+            # For February/March 2026, merge supplemental CSVs: (1-59) life science and "2(Sheet1)" - filter by conduct month
             if month in ("February_2026", "March_2026"):
-                df_ls = _load_and_normalize_life_science_csv(month, df.columns)
-                if df_ls is not None and len(df_ls) > 0:
-                    df = pd.concat([df, df_ls], ignore_index=True)
+                scorecards_dir = Path("Scorecards")
+                for supplemental_path in [
+                    scorecards_dir / "Scorecard Review Executive Summary(1-59).csv",
+                    scorecards_dir / "Scorecard Review Executive Summary 2(Sheet1).csv",
+                ]:
+                    df_sup = _load_and_normalize_supplemental_csv(supplemental_path, month, df.columns)
+                    if df_sup is not None and len(df_sup) > 0:
+                        df = pd.concat([df, df_sup], ignore_index=True)
             
             return df
         except UnicodeDecodeError:
@@ -352,21 +380,11 @@ def process_data(df, month=None):
     if df is None or len(df) == 0:
         return pd.DataFrame()  # Return empty dataframe instead of None
     
-    # For December 2025, filter to only entries with Id >= 62
-    if month == "December_2025" and 'Id' in df.columns:
-        df = df[df['Id'] >= 62].copy()
-        if len(df) == 0:
-            return pd.DataFrame()
-    
-    # For January 2026 / February 2026 / March 2026, filter by Start time month/year
-    if month in ("January_2026", "February_2026", "March_2026") and 'Start time' in df.columns:
+    # Filter by conduct month (Start time): Feb/Mar use conduct month (reviews in March = February scorecards), else label month
+    if (month in MONTH_TO_YEAR_MONTH or month in CONDUCT_MONTH_FOR_LABEL) and 'Start time' in df.columns:
+        year, target_month = CONDUCT_MONTH_FOR_LABEL.get(month) or MONTH_TO_YEAR_MONTH[month]
         start_series = pd.to_datetime(df['Start time'], errors='coerce')
-        if month == "January_2026":
-            mask = start_series.notna() & (start_series.dt.year == 2026) & (start_series.dt.month == 1)
-        elif month == "February_2026":
-            mask = start_series.notna() & (start_series.dt.year == 2026) & (start_series.dt.month == 2)
-        else:  # March_2026
-            mask = start_series.notna() & (start_series.dt.year == 2026) & (start_series.dt.month == 3)
+        mask = start_series.notna() & (start_series.dt.year == year) & (start_series.dt.month == target_month)
         df = df[mask].copy()
         if len(df) == 0:
             return pd.DataFrame()
@@ -1418,7 +1436,7 @@ def main():
     # Always include December 2025 for blank state
     if "December_2025" not in available_months:
         available_months.append("December_2025")
-        available_months = sorted(available_months, reverse=True)
+        available_months = sorted(available_months, key=_month_sort_key, reverse=True)
     
     # Format for display
     month_display = {m: m.replace("_", " ").title() for m in available_months}

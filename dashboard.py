@@ -17,13 +17,11 @@ MONTH_TO_YEAR_MONTH = {
     "December_2025": (2025, 12),
     "January_2026": (2026, 1),
     "February_2026": (2026, 2),
-    "March_2026": (2026, 3),
 }
 
 # Scorecard label -> conduct month (when reviews are submitted). Reviews conducted in March = February scorecards, etc.
 CONDUCT_MONTH_FOR_LABEL = {
     "February_2026": (2026, 3),   # February scorecards reviewed in March
-    "March_2026": (2026, 4),      # March scorecards reviewed in April
 }
 
 def _month_sort_key(month_key):
@@ -130,15 +128,13 @@ def get_available_months():
     # Also check for legacy files (current format)
     legacy_files = list(scorecards_dir.glob("Scorecard Review Executive Summary*.csv"))
     if legacy_files:
-        # Check for file (15) first, then (14), then (13) - contains December 2025 through March 2026
+        # Check for file (15) first, then (14), then (13) - contains December 2025, January 2026, February 2026
         file_15 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (15).csv"
         file_14 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (14).csv"
         file_13 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (13).csv"
-        file_ls = scorecards_dir / "Scorecard Review Executive Summary(1-59).csv"  # Life science (Feb/March)
+        file_ls = scorecards_dir / "Scorecard Review Executive Summary(1-59).csv"  # Life science (Feb)
         file_12 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (12).csv"
         if file_15.exists() or file_14.exists() or file_13.exists():
-            if "March_2026" not in months:
-                months.append("March_2026")
             if "February_2026" not in months:
                 months.append("February_2026")
             if "January_2026" not in months:
@@ -146,8 +142,6 @@ def get_available_months():
             if "December_2025" not in months:
                 months.append("December_2025")
         if file_ls.exists():
-            if "March_2026" not in months:
-                months.append("March_2026")
             if "February_2026" not in months:
                 months.append("February_2026")
         elif file_12.exists() and "December_2025" not in months:
@@ -216,7 +210,7 @@ def load_data(month=None):
     
     if month:
         # Load specific month file
-        if month in ("December_2025", "January_2026", "February_2026", "March_2026"):
+        if month in ("December_2025", "January_2026", "February_2026"):
             # Same CSV: (15) newest, then (14), (13), (12), (11), (10)
             legacy_path_15 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (15).csv")
             legacy_path_14 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (14).csv")
@@ -255,7 +249,7 @@ def load_data(month=None):
             available_months = get_available_months()
             if available_months:
                 month_key = available_months[0]
-                if month_key in ("December_2025", "January_2026", "February_2026", "March_2026"):
+                if month_key in ("December_2025", "January_2026", "February_2026"):
                     # Same CSV (13) for Dec 2025, Jan 2026, Feb 2026, Mar 2026
                     legacy_path_13 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (13).csv")
                     legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
@@ -327,11 +321,11 @@ def load_data(month=None):
                     df[col] = df[col].apply(clean_text)
             
             # For February/March 2026, merge supplemental CSVs: (1-59) life science and "2(Sheet1)" - filter by conduct month
-            if month in ("February_2026", "March_2026"):
+            if month == "February_2026":
                 scorecards_dir = Path("Scorecards")
                 for supplemental_path in [
                     scorecards_dir / "Scorecard Review Executive Summary(1-59).csv",
-                    scorecards_dir / "Scorecard Review Executive Summary 2(Sheet1).csv",
+                    scorecards_dir / "Scorecard Review Executive Summary 2(Sheet1) (1).csv",
                 ]:
                     df_sup = _load_and_normalize_supplemental_csv(supplemental_path, month, df.columns)
                     if df_sup is not None and len(df_sup) > 0:
@@ -390,7 +384,7 @@ def process_data(df, month=None):
             return pd.DataFrame()
     
     # New-format months: same column set and IFM/composite logic as December 2025
-    is_new_format_month = month in ("December_2025", "January_2026", "February_2026", "March_2026")
+    is_new_format_month = month in ("December_2025", "January_2026", "February_2026")
     
     # Detect which column set to use for each row
     # Check if original account column (index 7) is empty, if so use new columns (index 16+)
@@ -1664,7 +1658,7 @@ def main():
         st.session_state['switch_to_data_tab'] = False
     
     # Navigation buttons with sticky positioning (Insights tab for new-format months)
-    is_new_format_month = selected_month_key in ("December_2025", "January_2026", "February_2026", "March_2026")
+    is_new_format_month = selected_month_key in ("December_2025", "January_2026", "February_2026")
     
     if is_new_format_month:
         col1, col2, col3, col4 = st.columns(4)
@@ -1710,7 +1704,7 @@ def main():
     # Show content based on current view
     if st.session_state['current_view'] == 'cards':
         # Check if new-format month and account is selected (detail view)
-        is_new_format = selected_month_key in ("December_2025", "January_2026", "February_2026", "March_2026")
+        is_new_format = selected_month_key in ("December_2025", "January_2026", "February_2026")
         selected_account = st.session_state.get('selected_account', None)
         
         if is_new_format and selected_account and selected_account in accounts_with_data:
@@ -1823,10 +1817,10 @@ def main():
     
     elif st.session_state['current_view'] == 'insights':
         # Show insights for new-format months (Dec 2025, Jan 2026, Feb 2026)
-        if selected_month_key in ("December_2025", "January_2026", "February_2026", "March_2026"):
+        if selected_month_key in ("December_2025", "January_2026", "February_2026"):
             render_december_insights(processed_df, all_accounts, accounts_with_data, month_key=selected_month_key)
         else:
-            st.info("Insights are only available for December 2025, January 2026, February 2026, and March 2026 data.")
+            st.info("Insights are only available for December 2025, January 2026, and February 2026 data.")
     
     elif st.session_state['current_view'] == 'no_data':
         st.subheader("Accounts Without Data")

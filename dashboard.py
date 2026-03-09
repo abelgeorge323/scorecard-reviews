@@ -128,13 +128,14 @@ def get_available_months():
     # Also check for legacy files (current format)
     legacy_files = list(scorecards_dir.glob("Scorecard Review Executive Summary*.csv"))
     if legacy_files:
-        # Check for file (15) first, then (14), then (13) - contains December 2025, January 2026, February 2026
+        # Check for file (16) first, then (15), (14), (13) - contains December 2025, January 2026, February 2026
+        file_16 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (16).csv"
         file_15 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (15).csv"
         file_14 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (14).csv"
         file_13 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (13).csv"
         file_ls = scorecards_dir / "Scorecard Review Executive Summary(1-59).csv"  # Life science (Feb)
         file_12 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (12).csv"
-        if file_15.exists() or file_14.exists() or file_13.exists():
+        if file_16.exists() or file_15.exists() or file_14.exists() or file_13.exists():
             if "February_2026" not in months:
                 months.append("February_2026")
             if "January_2026" not in months:
@@ -211,14 +212,17 @@ def load_data(month=None):
     if month:
         # Load specific month file
         if month in ("December_2025", "January_2026", "February_2026"):
-            # Same CSV: (15) newest, then (14), (13), (12), (11), (10)
+            # Same CSV: (16) newest, then (15), (14), (13), (12), (11), (10)
+            legacy_path_16 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (16).csv")
             legacy_path_15 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (15).csv")
             legacy_path_14 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (14).csv")
             legacy_path_13 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (13).csv")
             legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
             legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
             legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
-            if legacy_path_15.exists():
+            if legacy_path_16.exists():
+                csv_path = legacy_path_16
+            elif legacy_path_15.exists():
                 csv_path = legacy_path_15
             elif legacy_path_14.exists():
                 csv_path = legacy_path_14
@@ -250,12 +254,21 @@ def load_data(month=None):
             if available_months:
                 month_key = available_months[0]
                 if month_key in ("December_2025", "January_2026", "February_2026"):
-                    # Same CSV (13) for Dec 2025, Jan 2026, Feb 2026, Mar 2026
+                    # Same CSV: (16) newest, then (15), (14), (13), (12), (11), (10)
+                    legacy_path_16 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (16).csv")
+                    legacy_path_15 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (15).csv")
+                    legacy_path_14 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (14).csv")
                     legacy_path_13 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (13).csv")
                     legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
                     legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
                     legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
-                    if legacy_path_13.exists():
+                    if legacy_path_16.exists():
+                        csv_path = legacy_path_16
+                    elif legacy_path_15.exists():
+                        csv_path = legacy_path_15
+                    elif legacy_path_14.exists():
+                        csv_path = legacy_path_14
+                    elif legacy_path_13.exists():
                         csv_path = legacy_path_13
                     elif legacy_path_12.exists():
                         csv_path = legacy_path_12
@@ -325,7 +338,7 @@ def load_data(month=None):
                 scorecards_dir = Path("Scorecards")
                 for supplemental_path in [
                     scorecards_dir / "Scorecard Review Executive Summary(1-59).csv",
-                    scorecards_dir / "Scorecard Review Executive Summary 2(Sheet1) (1).csv",
+                    scorecards_dir / "Scorecard Review Executive Summary 2(Sheet1) (2).csv",
                 ]:
                     df_sup = _load_and_normalize_supplemental_csv(supplemental_path, month, df.columns)
                     if df_sup is not None and len(df_sup) > 0:

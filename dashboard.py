@@ -111,16 +111,22 @@ def get_available_months():
     # Also check for legacy files (current format)
     legacy_files = list(scorecards_dir.glob("Scorecard Review Executive Summary*.csv"))
     if legacy_files:
-        # Check for file (12) - December 2025 (newest)
+        # Check for file (13) - contains December 2025, January 2026, February 2026
+        file_13 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (13).csv"
         file_12 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (12).csv"
-        if file_12.exists() and "December_2025" not in months:
+        if file_13.exists():
+            if "February_2026" not in months:
+                months.append("February_2026")
+            if "January_2026" not in months:
+                months.append("January_2026")
+            if "December_2025" not in months:
+                months.append("December_2025")
+        elif file_12.exists() and "December_2025" not in months:
             months.append("December_2025")
-        # Check for file (11) - December 2025 (fallback)
         elif not file_12.exists():
             file_11 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (11).csv"
             if file_11.exists() and "December_2025" not in months:
                 months.append("December_2025")
-            # Check for file (10) - December 2025 (fallback)
             elif not file_11.exists():
                 file_10 = scorecards_dir / "Scorecard Review Executive Summary(Sheet1) (10).csv"
                 if file_10.exists() and "December_2025" not in months:
@@ -142,12 +148,15 @@ def load_data(month=None):
     
     if month:
         # Load specific month file
-        if month == "December_2025":
-            # Check for file (12) first (newest), then (11), then (10), then new format
+        if month in ("December_2025", "January_2026", "February_2026"):
+            # Same CSV (13) for Dec 2025, Jan 2026, Feb 2026
+            legacy_path_13 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (13).csv")
             legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
             legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
             legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
-            if legacy_path_12.exists():
+            if legacy_path_13.exists():
+                csv_path = legacy_path_13
+            elif legacy_path_12.exists():
                 csv_path = legacy_path_12
             elif legacy_path_11.exists():
                 csv_path = legacy_path_11
@@ -172,12 +181,15 @@ def load_data(month=None):
             available_months = get_available_months()
             if available_months:
                 month_key = available_months[0]
-                if month_key == "December_2025":
-                    # Check for file (12) first (newest), then (11), then (10), then new format
+                if month_key in ("December_2025", "January_2026", "February_2026"):
+                    # Same CSV (13) for Dec 2025, Jan 2026, Feb 2026
+                    legacy_path_13 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (13).csv")
                     legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
                     legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
                     legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
-                    if legacy_path_12.exists():
+                    if legacy_path_13.exists():
+                        csv_path = legacy_path_13
+                    elif legacy_path_12.exists():
                         csv_path = legacy_path_12
                     elif legacy_path_11.exists():
                         csv_path = legacy_path_11
@@ -198,13 +210,16 @@ def load_data(month=None):
                 else:
                     csv_path = scorecards_dir / f"{month_key}_Scorecards.csv"
             else:
-                # Fallback to current file format - try file (12) first, then (11), then (10), then (8), then (5)
+                # Fallback to current file format - try file (13) first, then (12), (11), (10), (8), (5)
+                legacy_path_13 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (13).csv")
                 legacy_path_12 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (12).csv")
                 legacy_path_11 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (11).csv")
                 legacy_path_10 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (10).csv")
                 legacy_path_8 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (8).csv")
                 legacy_path_5 = Path("Scorecards/Scorecard Review Executive Summary(Sheet1) (5).csv")
-                if legacy_path_12.exists():
+                if legacy_path_13.exists():
+                    csv_path = legacy_path_13
+                elif legacy_path_12.exists():
                     csv_path = legacy_path_12
                 elif legacy_path_11.exists():
                     csv_path = legacy_path_11
@@ -280,19 +295,33 @@ def process_data(df, month=None):
         if len(df) == 0:
             return pd.DataFrame()
     
+    # For January 2026 / February 2026, filter by Start time month/year
+    if month in ("January_2026", "February_2026") and 'Start time' in df.columns:
+        start_series = pd.to_datetime(df['Start time'], errors='coerce')
+        if month == "January_2026":
+            mask = start_series.notna() & (start_series.dt.year == 2026) & (start_series.dt.month == 1)
+        else:  # February_2026
+            mask = start_series.notna() & (start_series.dt.year == 2026) & (start_series.dt.month == 2)
+        df = df[mask].copy()
+        if len(df) == 0:
+            return pd.DataFrame()
+    
+    # New-format months: same column set and IFM/composite logic as December 2025
+    is_new_format_month = month in ("December_2025", "January_2026", "February_2026")
+    
     # Detect which column set to use for each row
     # Check if original account column (index 7) is empty, if so use new columns (index 16+)
     original_account_col = 'Name of Account/Portfolio'
     new_account_col = 'Name of Account/Portfolio1'
     
     # Determine which column set to use for each row
-    # For December 2025, always use new columns (Id >= 62 entries)
+    # For new-format months, always use new columns
     # For other months, detect based on which column has data
-    is_december = (month == "December_2025")
+    is_december = (month == "December_2025")  # kept for any December-only logic; use is_new_format_month for shared behavior
     
     def get_account_name(row):
-        # For December, always use new column
-        if is_december:
+        # For new-format months (Dec 2025, Jan/Feb 2026), always use new column
+        if is_new_format_month:
             return row.get(new_account_col)
         # For other months, check which column has data
         if pd.notna(row.get(new_account_col)) and str(row.get(new_account_col)).strip():
@@ -302,8 +331,8 @@ def process_data(df, month=None):
     
     def get_column_value(row, original_col, new_col):
         """Get value from appropriate column set"""
-        # For December, always use new column set
-        if is_december:
+        # For new-format months, always use new column set
+        if is_new_format_month:
             if new_col in df.columns:
                 return row.get(new_col)
             return None
@@ -327,9 +356,10 @@ def process_data(df, month=None):
     # Filter out None values (omitted accounts)
     df = df[df['Account_Normalized'].notna()].copy()
     
-    # Extract IFM field from "Who is Your FM" column (index 15) - do this before creating composite key
-    if 'Who is Your FM' in df.columns:
-        df['IFM'] = df['Who is Your FM'].fillna('')
+    # Extract IFM field (file 13 uses "Who is Your IFM", older files use "Who is Your FM")
+    ifm_col = 'Who is Your IFM' if 'Who is Your IFM' in df.columns else 'Who is Your FM'
+    if ifm_col in df.columns:
+        df['IFM'] = df[ifm_col].fillna('')
         df['IFM'] = df['IFM'].apply(lambda x: str(x).strip() if pd.notna(x) else '')
     else:
         df['IFM'] = ''
@@ -340,8 +370,8 @@ def process_data(df, month=None):
         base_account = row['Account_Normalized']
         ifm = row.get('IFM', '')
         
-        # For December entries or when IFM is present, append IFM to create unique identifier
-        if is_december and ifm and ifm != '':
+        # For new-format months or when IFM is present, append IFM to create unique identifier
+        if is_new_format_month and ifm and ifm != '':
             # Clean up IFM value for display
             ifm_clean = ifm.replace('(None)', '').strip()
             if ifm_clean:
@@ -825,9 +855,10 @@ def render_december_detail_view(account, data):
     st.markdown("### Action Items")
     st.write(data.get('action_items', 'N/A'))
 
-def render_december_insights(processed_df, all_accounts, accounts_with_data):
-    """Render insights page for December 2025"""
-    st.subheader("December Insights")
+def render_december_insights(processed_df, all_accounts, accounts_with_data, month_key="December_2025"):
+    """Render insights page for December 2025 / January 2026 / February 2026"""
+    month_label = month_key.replace("_", " ").title()
+    st.subheader(f"{month_label} Insights")
     
     # Key Counts Section
     st.markdown("### Key Statistics")
@@ -1252,8 +1283,8 @@ def render_account_card(account, data, month=None):
         date_display = data['date'].strftime('%m/%d/%Y') if pd.notna(data['date']) else 'N/A'
         
         # For December, make the entire card clickable
-        if month == "December_2025":
-            # For December, display card with clickable button below it
+        if month in ("December_2025", "January_2026", "February_2026"):
+            # Display card with clickable button below it
             st.markdown(f"""
             <div class="account-card" style="cursor: pointer;">
                 <h3 style="margin: 0 0 10px 0; color: #1a1a1a;">{account}</h3>
@@ -1328,20 +1359,13 @@ def main():
     month_display = {m: m.replace("_", " ").title() for m in available_months}
     month_options = list(month_display.values())
     
-    # Initialize selected month in session state - default to December 2025
+    # Initialize selected month in session state - default to most recent (first in list)
     if 'selected_month' not in st.session_state:
-        # Try to find December 2025, otherwise use first available
-        if "December 2025" in month_options:
-            st.session_state['selected_month'] = "December 2025"
-        else:
-            st.session_state['selected_month'] = month_options[0] if month_options else "November 2025"
+        st.session_state['selected_month'] = month_options[0] if month_options else "November 2025"
     
-    # Get the selected month key (use session state or default to December)
+    # Get the selected month key (use session state or default to first available)
     if 'selected_month_key' not in st.session_state:
-        if "December 2025" in month_options:
-            selected_month_display = "December 2025"
-        else:
-            selected_month_display = month_options[0] if month_options else "November 2025"
+        selected_month_display = month_options[0] if month_options else "November 2025"
         selected_month_key = [k for k, v in month_display.items() if v == selected_month_display][0]
         st.session_state['selected_month_key'] = selected_month_key
         st.session_state['selected_month_display'] = selected_month_display
@@ -1556,10 +1580,10 @@ def main():
         st.session_state['current_view'] = 'data'
         st.session_state['switch_to_data_tab'] = False
     
-    # Navigation buttons with sticky positioning
-    is_december = (selected_month_key == "December_2025")
+    # Navigation buttons with sticky positioning (Insights tab for new-format months)
+    is_new_format_month = selected_month_key in ("December_2025", "January_2026", "February_2026")
     
-    if is_december:
+    if is_new_format_month:
         col1, col2, col3, col4 = st.columns(4)
         with col1:
             if st.button("Account Cards", use_container_width=True, type="primary" if st.session_state['current_view'] == 'cards' else "secondary", key="nav_cards"):
@@ -1602,12 +1626,12 @@ def main():
     
     # Show content based on current view
     if st.session_state['current_view'] == 'cards':
-        # Check if December and account is selected
-        is_december = (selected_month_key == "December_2025")
+        # Check if new-format month and account is selected (detail view)
+        is_new_format = selected_month_key in ("December_2025", "January_2026", "February_2026")
         selected_account = st.session_state.get('selected_account', None)
         
-        if is_december and selected_account and selected_account in accounts_with_data:
-            # Show detailed view for December
+        if is_new_format and selected_account and selected_account in accounts_with_data:
+            # Show detailed view for this month
             render_december_detail_view(selected_account, accounts_with_data[selected_account])
         else:
             # Show account cards grid
@@ -1715,11 +1739,11 @@ def main():
                     st.rerun()
     
     elif st.session_state['current_view'] == 'insights':
-        # Only show insights for December
-        if selected_month_key == "December_2025":
-            render_december_insights(processed_df, all_accounts, accounts_with_data)
+        # Show insights for new-format months (Dec 2025, Jan 2026, Feb 2026)
+        if selected_month_key in ("December_2025", "January_2026", "February_2026"):
+            render_december_insights(processed_df, all_accounts, accounts_with_data, month_key=selected_month_key)
         else:
-            st.info("Insights are only available for December 2025 data.")
+            st.info("Insights are only available for December 2025, January 2026, and February 2026 data.")
     
     elif st.session_state['current_view'] == 'no_data':
         st.subheader("Accounts Without Data")

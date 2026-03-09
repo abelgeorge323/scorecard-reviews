@@ -1,214 +1,236 @@
+# Account name (canonical) -> Vertical. Source: user-provided list.
+# For dual-vertical entries (Geico, Siemens, Siemens Healthineers), first listed vertical is used.
 account_to_vertical = {
-    # ✈️ Aviation — (Vertical Leader: Brandon Castillo)
-    "Delta Air Lines": "Aviation",  # Brandon Castillo
-
-    # 🚗 Automotive — (Vertical Leaders: Marvin Owens / John Mann Interim)
-    "Ford Motor Company": "Automotive",        # Nick Mufarrah / Khalfani Towns
-    "General Motors": "Automotive",            # Robert Wallen
-    "Tesla Inc.": "Automotive",                # Jacob Reed
-    "Honda Motor Company": "Automotive",       # Greyson Wolff / Zach Kuebler
-    "Detroit Diesel (DDC)": "Automotive",      # Robert Wallen (GM/DDC)
-
-    # 🏭 Manufacturing — (Vertical Leaders: Ayesha Nasir / Aaron Simpson / Kim Wittekind)
-    "Lockheed Martin": "Manufacturing",        # Michelle Bickford / Ben Ehrenberg
-    "Boeing Company": "Manufacturing",         # Justin Dallavis
-    "Northrop Grumman": "Manufacturing",       # Jennifer Segovia
-    "Hewlett-Packard": "Manufacturing",        # Mark Schlerf / Jose Torres
-    "Textron Aviation": "Manufacturing",       # Manufacturing cluster
-    "Spirit Aerosystems": "Manufacturing",     # Manufacturing cluster
-    "United Technologies": "Manufacturing",    # Manufacturing cluster
-    "Mars": "Manufacturing",                   # Aaron Simpson (3M, Ball Corp, Mars)
-    "Ball Corp": "Manufacturing",              # Aaron Simpson
-    "Procter & Gamble Company": "Manufacturing", # Dustin Smith / Brent Taylor
-    "GE Healthcare": "Manufacturing",          # Kim Wittekind
-    "General Electric": "Manufacturing",       # Kim Wittekind (GE Aerospace)
-    "General Dynamics": "Manufacturing",       # Jennifer Segovia
-    "Nestle": "Manufacturing",                 # Kim Wittekind
-    "Westinghouse": "Manufacturing",           # Ayesha Nasir
-    "Micron Tech": "Manufacturing",            # Siddarth Shah (Manufacturing vertical)
-    "Intel": "Manufacturing",                  # Jeremy Johnson / Alex Kennedy
-    "LAM Research": "Manufacturing",           # Mark Schlerf / Jose Torres
-
-    # 💻 Technology — (Vertical Leaders: Dan Hartman / Ryan Blackwood)
-    "Microsoft": "Technology",                 # Shane Follmann / Taylor Wattenberg / Ivan Taminez
-    "Meta": "Technology",                      # Luna Duarte / Grant Frazier
-    "Amazon": "Technology",                    # Keith Deuber / Dustin Smith (Global Accounts)
-    "Amazon Office": "Technology",             # Sub-account of Amazon Global Accounts
-    "Google": "Technology",                    # Ryan Blackwood / Caren Courtney / Ana Sabater
-    "NVIDIA": "Technology",                    # Stuart Kelloff
-    "Adobe Systems": "Technology",             # Zane Hauck / Stuart Kelloff
-    "LinkedIn": "Technology",                  # Ryan Blackwood cluster
-    "IBM": "Technology",                       # IBM – Technology vertical cluster
-    "Uber": "Technology",                      # ✅ Ryan Blackwood / Ana Sabater
-
-    # 💊 Life Science — (Vertical Leader: Dan Hartman)
-    "Merck": "Life Science",                   # Brian Davis / Dave Pergola / Justin Homa
-    "Merck CBRE": "Life Science",              # Justin Homa - Separate from Merck Sodexo
-    "Abbott Labs": "Life Science",             # Greg DeMedio
-    "Amgen": "Life Science",                   # Thomas Mahoney
-    "Eli Lilly": "Life Science",               # Sara Brake / Fern Garner
-    "Sanofi": "Life Science",                  # Scott Kimball
-    "Gilead Sciences": "Life Science",         # Josh Grady (Gilead/Kite)
-    "Takeda Pharmaceutical": "Life Science",   # Luis Cabrera
-    "Lonza Biologics": "Life Science",         # Jacqueline Maravilla
-    "Bristol Myers Squibb": "Life Science",    # Mike Barry (BMS)
-    "Bayer": "Life Science",                   # Isaac Calderon
-    "Medtronic": "Life Science",               # Gisell Langelier / Dan Hartman
-    "Biogen": "Life Science",                  # Ann McClellan
-    "Boehringer Ingelheim": "Life Science",    # Zach Shock
-    "Novartis": "Life Science",                # Mike Barry
-    "Johnson & Johnson": "Life Science",       # Isaac Calderon
-    "AbbVie": "Life Science",                  # Corey Wallace (Life Science vertical)
-    "Thermo Fisher Scientific API": "Life Science",
+    "3M Corp": "Manufacturing",
+    "AbbVie": "Life Science",
+    "Abbott Labs": "Life Science",
+    "Adobe": "Technology",
+    "Altera": "Technology",
+    "Amazon": "Distribution",
+    "Amgen": "Life Science",
+    "Ball Corporation": "Manufacturing",
+    "Bayer": "Life Science",
+    "Biogen": "Life Science",
+    "Bluerock Therapeutics": "Life Science",
+    "Boeing Company": "Manufacturing",
+    "Bombardier Learjet": "Manufacturing",
+    "Bristol Myers Squibb": "Life Science",
+    "CIGNA": "Finance",
+    "Capsida Biotherapeutics": "Life Science",
     "Cardinal Health": "Life Science",
-    "IQVIA": "Life Science",
-    "McKesson": "Life Science",
-
-    # 💰 Finance — (Vertical Leaders: Peggy Shum / Tiffany Purifoy)
-    "Wells Fargo": "Finance",                  # Colleen Doles / Eduardo Sanchez
-    "Charles Schwab": "Finance",               # Tiffany Purifoy
-    "Deutsche Bank": "Finance",                # Peggy Shum
-    "CIGNA": "Finance",                        # Julie Bianchi
-    "USAA": "Finance",                         # Nashir Carabali
-    "Elevance": "Finance",
-    "Fidelity": "Finance",
-    "State Farm": "Finance",
+    "Charles Schwab": "Finance",
+    "Chubb Insurance": "Finance",
     "Citibank": "Finance",
-    "T.Rowe Price": "Finance",
-
-    # 📦 Distribution — (Vertical Leader: TBD)
-    "Nike": "Distribution",  # Includes DHL, GXO Relay, GXO Connect, NALC, Adapt locations
-
-    # 🧪 R&D / Education / Other
-    "Great American Ball Park": "R&D / Education / Other"  # Facilities / Other cluster
+    "Computershare": "Technology",
+    "Conduent": "Technology",
+    "DP World": "Technology",
+    "Deutsche Bank": "Finance",
+    "DuPont": "Manufacturing",
+    "Elevance Health": "Finance",
+    "Eli Lilly LCC/LRL": "Life Science",
+    "Fidelity": "Finance",
+    "Fuji Film": "Life Science",
+    "GE Healthcare": "Manufacturing",
+    "GE Power": "Manufacturing",
+    "General Dynamics": "Manufacturing",
+    "General Electric": "Manufacturing",
+    "Geico": "Life Science",  # dual: Life Science, Finance - using first
+    "Genentech": "Life Science",
+    "Google": "Technology",
+    "GXO Logistics": "Distribution",
+    "HPE": "Technology",
+    "Hewlett-Packard": "Technology",
+    "Honda Motor Company": "Automotive",
+    "Hyliion": "Manufacturing",
+    "IBM": "Technology",
+    "Intel": "Technology",
+    "IQVIA Biotech": "Life Science",
+    "IRG Realty Advisors": "Technology",
+    "Johnson & Johnson": "Life Science",
+    "JP Morgan Chase": "Finance",
+    "Kenvue": "Life Science",
+    "LAM Research": "Technology",
+    "LinkedIn": "Technology",
+    "Lockheed Martin": "Manufacturing",
+    "Lonza Biologics": "Life Science",
+    "Mars": "Manufacturing",
+    "McKesson": "Life Science",
+    "Medtronic": "Life Science",
+    "Merck": "Life Science",
+    "Merck Sodexo": "Life Science",
+    "Meta": "Technology",
+    "Micron Tech": "Technology",
+    "Microsoft": "Technology",
+    "MilliporeSigma": "Life Science",
+    "Moderna Biotechnology Company": "Life Science",
+    "Mp Mask Technology Center": "Technology",
+    "Nestle": "Manufacturing",
+    "Nike": "Distribution",
+    "Northrop Grumman": "Manufacturing",
+    "Novartis": "Life Science",
+    "NVIDIA": "Technology",
+    "Oracle": "Technology",
+    "Organon": "Life Science",
+    "Parsons Corporation": "Manufacturing",
+    "Photronics": "Technology",
+    "Piper Aircraft": "Manufacturing",
+    "Procter & Gamble Company": "Manufacturing",
+    "Sanofi": "Life Science",
+    "Scale AI": "Technology",
+    "Siemens": "Life Science",  # dual: Life Science, Finance - using first
+    "Siemens Healthineers": "Life Science",  # dual - using first
+    "Siltronic Corp": "Technology",
+    "State Farm Ins": "Finance",
+    "T Rowe Price": "Finance",
+    "Takeda Pharmaceutical": "Life Science",
+    "Tesla Inc - Jacob Reed": "Technology",
+    "Texas Instruments": "Technology",
+    "Uber": "Technology",
+    "Wells Fargo": "Finance",
+    "Westinghouse": "Manufacturing",
+    # Legacy/CSV-only names kept so existing data still maps
+    "Merck CBRE": "Life Science",
+    "Boehringer Ingelheim": "Life Science",
+    "Gilead Sciences": "Life Science",
+    "Pfizer": "Life Science",
+    "Thermo Fisher Scientific API": "Life Science",
+    "Ford Motor Company": "Automotive",
+    "General Motors": "Automotive",
+    "Detroit Diesel (DDC)": "Automotive",
+    "Delta Air Lines": "Aviation",
+    "Textron Aviation": "Manufacturing",
+    "Spirit Aerosystems": "Manufacturing",
+    "USAA": "Finance",
+    "Great American Ball Park": "R&D / Education / Other",
 }
 
-# Fuzzy matching dictionary - maps CSV variations to canonical account names
+# Maps CSV / form variations to canonical account names (must exist in account_to_vertical)
 account_name_variations = {
-    # Exact matches (case-insensitive handled separately)
     "Abbvie": "AbbVie",
     "abbvie": "AbbVie",
-    "Merck Sodexo": "Merck",
-    "merck sodexo": "Merck",
-    "Ball Corp": "Ball Corp",
-    "ball corp": "Ball Corp",
+    "Abbottt": "Abbott Labs",
+    "abbottt": "Abbott Labs",
+    "Abbott": "Abbott Labs",
+    "abbott": "Abbott Labs",
+    "3M": "3M Corp",
+    "Ball Corp": "Ball Corporation",
+    "ball corp": "Ball Corporation",
     "Cigna": "CIGNA",
     "cigna": "CIGNA",
-    "GM Milford": "General Motors",
-    "gm milford": "General Motors",
-    "Grant frazier": "Meta",  # Data entry error - Grant Frazier is Meta AD
-    "grant frazier": "Meta",
-    "Micron (C&W)": "Micron Tech",
-    "micron (c&w)": "Micron Tech",
-    "Great American Ballpark": "Great American Ball Park",
-    "great american ballpark": "Great American Ball Park",
+    "Elevance": "Elevance Health",
+    "elevance": "Elevance Health",
+    "T.Rowe Price": "T Rowe Price",
+    "t.rowe price": "T Rowe Price",
+    "T.Rowe Price": "T Rowe Price",
+    "t rowe price": "T Rowe Price",
+    "State Farm": "State Farm Ins",
+    "state farm": "State Farm Ins",
+    "Adobe Systems": "Adobe",
+    "adobe": "Adobe",
     "Lam Research": "LAM Research",
     "lam research": "LAM Research",
-    "P&G(JLL)": "Procter & Gamble Company",
-    "p&g(jll)": "Procter & Gamble Company",
-    "P&G": "Procter & Gamble Company",
-    "p&g": "Procter & Gamble Company",
+    "Eli Lilly LCC/LRL": "Eli Lilly",
+    "eli lilly lcc/lrl": "Eli Lilly",
+    "eli lilly": "Eli Lilly",
+    "IQVIA": "IQVIA Biotech",
+    "iqvia": "IQVIA Biotech",
+    "Tesla": "Tesla Inc - Jacob Reed",
+    "tesla": "Tesla Inc - Jacob Reed",
+    "Tesla Inc.": "Tesla Inc - Jacob Reed",
+    "GM Milford": "General Motors",
+    "gm milford": "General Motors",
+    "GM Grand Rapids": "General Motors",
+    "gm grand rapids": "General Motors",
+    "Grant frazier": "Meta",
+    "grant frazier": "Meta",
     "Microsoft Puget Sound": "Microsoft",
     "microsoft puget sound": "Microsoft",
     "Boeing": "Boeing Company",
     "boeing": "Boeing Company",
-    "General Dynamics": "General Dynamics",
-    "general dynamics": "General Dynamics",
-    "JLL Northrop Grumman": "Northrop Grumman",  # Map to canonical name
-    "Wells Fargo-JLL": "Wells Fargo",  # JLL managed Wells Fargo
+    "JLL Northrop Grumman": "Northrop Grumman",
+    "Wells Fargo-JLL": "Wells Fargo",
     "wells fargo-jll": "Wells Fargo",
-    "Abbottt": "Abbott Labs",  # Typo in CSV
-    "abbottt": "Abbott Labs",
-    "Abbott": "Abbott Labs",  # Variation
-    "abbott": "Abbott Labs",
-    "Johnson & Johnson JLL": "Johnson & Johnson",  # JLL managed J&J
-    "johnson & johnson jll": "Johnson & Johnson",
-    "Nestle - St. Louis": "Nestle",  # Location-specific Nestle
-    "nestle - st. louis": "Nestle",
-    "GE Healthcare - All Sites": "GE Healthcare",  # Multi-site GE Healthcare
+    "GE Healthcare - All Sites": "GE Healthcare",
     "ge healthcare - all sites": "GE Healthcare",
-    "Daimler - Detroit Diesel": "Detroit Diesel (DDC)",  # Daimler owns DDC
+    "Johnson & Johnson JLL": "Johnson & Johnson",
+    "johnson & johnson jll": "Johnson & Johnson",
+    "J&J JLL": "Johnson & Johnson",
+    "Nestle - St. Louis": "Nestle",
+    "nestle - st. louis": "Nestle",
+    "Daimler - Detroit Diesel": "Detroit Diesel (DDC)",
     "daimler - detroit diesel": "Detroit Diesel (DDC)",
-    "GM Grand Rapids": "General Motors",  # GM location
-    "gm grand rapids": "General Motors",
-    "Adobe": "Adobe Systems",  # Short name variant
-    "adobe": "Adobe Systems",
-    "Tesla": "Tesla Inc.",  # Short name variant
-    "tesla": "Tesla Inc.",
-    "Omnicom": None,  # Omit from dashboard
-    
-    # Nike accounts - all map to single Nike account
-    "Nike/DHL": "Nike",
-    "nike/dhl": "Nike",
-    "Nike/GXO Relay": "Nike",
-    "Nike/GXO Relay (California)": "Nike",
-    "nike/gxo relay": "Nike",
-    "Nike/GXO Connect": "Nike",
-    "Nike/GXO  Connect": "Nike",  # Extra space
-    "nike/gxo connect": "Nike",
-    "Nike/NALC": "Nike",
-    "nike/nalc": "Nike",
-    "Nike/Adapt": "Nike",
-    "nike/adapt": "Nike",
-    # Additional Nike variations from December 2025
-    "Nike Adapt": "Nike",
-    "nike adapt": "Nike",
-    "Relay": "Nike",  # From GXO/Nike
-    "relay": "Nike",
-    "Connect": "Nike",  # From GXO/Nike
-    "connect": "Nike",
-    "NIKE/DHL Dash": "Nike",
-    "nike/dhl dash": "Nike",
-    
-    # Lonza variations
-    "Lonza JLL": "Lonza Biologics",
-    "lonza jll": "Lonza Biologics",
-    "Lonza": "Lonza Biologics",  # In case it's just "Lonza"
-    "lonza": "Lonza Biologics",
-    
-    # New accounts from CSV (5)
-    "Merck CBRE": "Merck CBRE",  # Separate account from Merck Sodexo
+    "P&G(JLL)": "Procter & Gamble Company",
+    "p&g(jll)": "Procter & Gamble Company",
+    "P&G": "Procter & Gamble Company",
+    "p&g": "Procter & Gamble Company",
+    "Micron (C&W)": "Micron Tech",
+    "micron (c&w)": "Micron Tech",
+    "Great American Ballpark": "Great American Ball Park",
+    "great american ballpark": "Great American Ball Park",
+    "Merck Sodexo": "Merck Sodexo",
+    "merck sodexo": "Merck Sodexo",
+    "Merck CBRE": "Merck CBRE",
     "merck cbre": "Merck CBRE",
+    "Merck/CBRE": "Merck CBRE",
+    "merck/cbre": "Merck CBRE",
+    "Merck/CBRE All Locations": "Merck CBRE",
+    "merck/cbre all locations": "Merck CBRE",
     "Takeda (CBRE)": "Takeda Pharmaceutical",
     "takeda (cbre)": "Takeda Pharmaceutical",
     "Honda": "Honda Motor Company",
     "honda": "Honda Motor Company",
     "Gilead": "Gilead Sciences",
     "gilead": "Gilead Sciences",
-    "Gilead Oceanside": "Gilead Sciences",  # Maps to same account as Gilead
+    "Gilead Oceanside": "Gilead Sciences",
     "gilead oceanside": "Gilead Sciences",
-    
-    # New accounts from CSV (8)
-    "BMS": "Bristol Myers Squibb",  # Abbreviation for Bristol Myers Squibb
+    "BMS": "Bristol Myers Squibb",
     "bms": "Bristol Myers Squibb",
-    "Google Bay & San Francisco": "Google",  # Google location variant
-    "google bay & san francisco": "Google",
-    
-    # December 2025 additions
-    "BI": "Boehringer Ingelheim",  # Short form for Boehringer Ingelheim
+    "BI": "Boehringer Ingelheim",
     "bi": "Boehringer Ingelheim",
-    "Altera": "Intel",  # Intel location
-    "altera": "Intel",
-    "CBRE/Nvidia": "NVIDIA",  # NVIDIA location variant
+    "Altera": "Altera",
+    "altera": "Altera",
+    "CBRE/Nvidia": "NVIDIA",
     "cbre/nvidia": "NVIDIA",
-    "Thermo Fisher Scientific API": "Thermo Fisher Scientific API",
-    "thermo fisher scientific api": "Thermo Fisher Scientific API",
-    "Cardinal Health": "Cardinal Health",
-    "cardinal health": "Cardinal Health",
-    "IQVIA": "IQVIA",
-    "iqvia": "IQVIA",
-    "McKesson": "McKesson",
-    "mckesson": "McKesson",
-    "Elevance": "Elevance",
-    "elevance": "Elevance",
-    "Fidelity": "Fidelity",
-    "fidelity": "Fidelity",
-    "State Farm": "State Farm",
-    "state farm": "State Farm",
-    "Citibank": "Citibank",
-    "citibank": "Citibank",
-    "T.Rowe Price": "T.Rowe Price",
-    "t.rowe price": "T.Rowe Price",
-    "T Rowe Price": "T.Rowe Price",  # Variation without period
-    "t rowe price": "T.Rowe Price",
+    "Organon/CBRE": "Organon",
+    "organon/cbre": "Organon",
+    "Pfizer Memphis": "Pfizer",
+    "pfizer memphis": "Pfizer",
+    "Lonza JLL": "Lonza Biologics",
+    "lonza jll": "Lonza Biologics",
+    "Lonza": "Lonza Biologics",
+    "lonza": "Lonza Biologics",
+    "Genentech HTO": "Genentech",
+    "Genentech HIT": "Genentech",
+    "Cardinal Helth": "Cardinal Health",
+    "Google Bay & San Francisco": "Google",
+    "google bay & san francisco": "Google",
+    # Nike / GXO / DHL variants
+    "Nike/DHL": "Nike",
+    "nike/dhl": "Nike",
+    "Nike/GXO Relay": "Nike",
+    "Nike/GXO Relay (California)": "Nike",
+    "nike/gxo relay": "Nike",
+    "Nike/GXO Connect": "Nike",
+    "Nike/GXO  Connect": "Nike",
+    "nike/gxo connect": "Nike",
+    "Nike/NALC": "Nike",
+    "nike/nalc": "Nike",
+    "Nike/Adapt": "Nike",
+    "nike/adapt": "Nike",
+    "Nike Adapt": "Nike",
+    "GXO/Nike": "Nike",
+    "GXO/Nike Connect": "Nike",
+    "GXO/Nike Relay": "Nike",
+    "GXO Nike Relay Bloomington, CA": "Nike",
+    "NIKE/DHL Dash": "Nike",
+    "DHL/NIKE Dash": "Nike",
+    "DHL/NIKE DASH": "Nike",
+    "Nike/NALC": "Nike",
+    "NIKE/NALC": "Nike",
+    "NIKE/ADAPT": "Nike",
+    "GXO/NIKE": "Nike",
+    "GXO/NIKE Conn ct": "Nike",
+    "Relay": "Nike",
+    "Connect": "Nike",
+    "Omnicom": None,
 }

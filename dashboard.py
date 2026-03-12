@@ -351,7 +351,7 @@ def load_data(month=None):
                 scorecards_dir = Path("Scorecards")
                 for supplemental_path in [
                     scorecards_dir / "Scorecard Review Executive Summary(1-59).csv",
-                    scorecards_dir / "Scorecard Review Executive Summary 2(Sheet1) (2).csv",
+                    scorecards_dir / "Scorecard Review Executive Summary 2(Sheet1) (4).csv",
                 ]:
                     df_sup = _load_and_normalize_supplemental_csv(supplemental_path, month, df.columns)
                     if df_sup is not None and len(df_sup) > 0:
